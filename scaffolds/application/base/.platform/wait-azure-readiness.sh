@@ -22,7 +22,7 @@ if (( readiness_attempts < 1 || readiness_attempts > 20 )); then
 fi
 
 kubeconfig=""
-# shellcheck disable=SC2329 # Invoked indirectly by the EXIT trap below.
+# shellcheck disable=SC2317,SC2329 # Invoked indirectly by the EXIT trap below.
 cleanup() {
   if [[ -n "$kubeconfig" ]]; then
     rm -f "$kubeconfig"

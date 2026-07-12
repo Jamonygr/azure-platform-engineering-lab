@@ -68,10 +68,17 @@ jobs:
             tests/terraform
           )
           for directory in "${roots[@]}"; do
-            test -s "${directory}/.terraform.lock.hcl" || {
-              echo "Missing committed lockfile: ${directory}/.terraform.lock.hcl" >&2
+            lockfile="${directory}/.terraform.lock.hcl"
+            test -s "$lockfile" || {
+              echo "Missing committed lockfile: ${lockfile}" >&2
               exit 1
             }
+            provider_count="$(grep --count '^provider ' "$lockfile")"
+            platform_hash_count="$(grep --count '^    \"h1:' "$lockfile")"
+            if (( platform_hash_count < provider_count * 2 )); then
+              echo "Lockfile lacks Linux/Windows package hashes: ${lockfile}" >&2
+              exit 1
+            fi
           done
           sha256sum "${roots[@]/%//.terraform.lock.hcl}" > "$RUNNER_TEMP/terraform-locks.before"
       - name: Validate every Terraform root with immutable lockfiles
@@ -150,13 +157,13 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      security-events: write
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           fetch-depth: 0
+      - uses: ./.github/actions/setup-gitleaks
       - name: Secret history scan
-        uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2
+        run: gitleaks git --redact --no-banner --config .gitleaks.toml --log-opts=HEAD .
       - name: Filesystem vulnerability and misconfiguration scan
         uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8 # v0.33.1
         with:
