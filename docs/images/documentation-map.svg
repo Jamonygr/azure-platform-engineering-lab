@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="320" viewBox="0 0 1200 320" role="img" aria-labelledby="title desc">
+  <title id="title">Azure Platform Engineering Lab documentation map</title>
+  <desc id="desc">A map from orientation to build, operate, prove, and learn documentation sections.</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0B1F3A"/>
+      <stop offset="1" stop-color="#0F4C81"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="320" rx="14" fill="url(#background)"/>
+  <g font-family="Segoe UI, Arial, sans-serif">
+    <text x="52" y="55" fill="#FFFFFF" font-size="25" font-weight="700">DOCUMENTATION MAP</text>
+    <text x="52" y="82" fill="#BFD5E8" font-size="14">Choose the route that matches what you need to do next.</text>
+    <g transform="translate(52 116)">
+      <g>
+        <rect width="205" height="130" rx="14" fill="#16385E" stroke="#0078D4" stroke-width="2"/>
+        <circle cx="30" cy="30" r="17" fill="#0078D4"/>
+        <text x="30" y="36" text-anchor="middle" fill="#FFFFFF" font-size="16" font-weight="700">1</text>
+        <text x="58" y="35" fill="#FFFFFF" font-size="16" font-weight="700">ORIENT</text>
+        <text x="22" y="71" fill="#D7E8F7" font-size="13">README</text>
+        <text x="22" y="94" fill="#D7E8F7" font-size="13">Architecture</text>
+        <text x="22" y="117" fill="#D7E8F7" font-size="13">Book guide</text>
+      </g>
+      <g transform="translate(225)">
+        <rect width="205" height="130" rx="14" fill="#16385E" stroke="#00B7C3" stroke-width="2"/>
+        <circle cx="30" cy="30" r="17" fill="#00B7C3"/>
+        <text x="30" y="36" text-anchor="middle" fill="#0B1F3A" font-size="16" font-weight="700">2</text>
+        <text x="58" y="35" fill="#FFFFFF" font-size="16" font-weight="700">BUILD</text>
+        <text x="22" y="71" fill="#D7E8F7" font-size="13">Setup</text>
+        <text x="22" y="94" fill="#D7E8F7" font-size="13">Golden paths</text>
+        <text x="22" y="117" fill="#D7E8F7" font-size="13">Reference</text>
+      </g>
+      <g transform="translate(450)">
+        <rect width="205" height="130" rx="14" fill="#16385E" stroke="#7FBA00" stroke-width="2"/>
+        <circle cx="30" cy="30" r="17" fill="#7FBA00"/>
+        <text x="30" y="36" text-anchor="middle" fill="#0B1F3A" font-size="16" font-weight="700">3</text>
+        <text x="58" y="35" fill="#FFFFFF" font-size="16" font-weight="700">OPERATE</text>
+        <text x="22" y="71" fill="#D7E8F7" font-size="13">Lifecycle</text>
+        <text x="22" y="94" fill="#D7E8F7" font-size="13">Governance</text>
+        <text x="22" y="117" fill="#D7E8F7" font-size="13">Monitoring</text>
+      </g>
+      <g transform="translate(675)">
+        <rect width="205" height="130" rx="14" fill="#16385E" stroke="#FFB900" stroke-width="2"/>
+        <circle cx="30" cy="30" r="17" fill="#FFB900"/>
+        <text x="30" y="36" text-anchor="middle" fill="#0B1F3A" font-size="16" font-weight="700">4</text>
+        <text x="58" y="35" fill="#FFFFFF" font-size="16" font-weight="700">PROVE</text>
+        <text x="22" y="71" fill="#D7E8F7" font-size="13">Testing</text>
+        <text x="22" y="94" fill="#D7E8F7" font-size="13">Troubleshooting</text>
+        <text x="22" y="117" fill="#D7E8F7" font-size="13">Break glass</text>
+      </g>
+      <g transform="translate(900)">
+        <rect width="205" height="130" rx="14" fill="#16385E" stroke="#79BDE8" stroke-width="2"/>
+        <circle cx="30" cy="30" r="17" fill="#79BDE8"/>
+        <text x="30" y="36" text-anchor="middle" fill="#0B1F3A" font-size="16" font-weight="700">5</text>
+        <text x="58" y="35" fill="#FFFFFF" font-size="16" font-weight="700">LEARN</text>
+        <text x="22" y="71" fill="#D7E8F7" font-size="13">Wiki hub</text>
+        <text x="22" y="94" fill="#D7E8F7" font-size="13">AZ-305 / AZ-400</text>
+        <text x="22" y="117" fill="#D7E8F7" font-size="13">Workbook</text>
+      </g>
+    </g>
+  </g>
+</svg>

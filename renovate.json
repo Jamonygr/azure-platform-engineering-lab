@@ -1,0 +1,19 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "dependencyDashboard": true,
+  "labels": ["dependencies"],
+  "packageRules": [
+    {
+      "description": "Review Terraform and AVM updates together",
+      "matchManagers": ["terraform"],
+      "groupName": "terraform and azure verified modules",
+      "rangeStrategy": "pin"
+    },
+    {
+      "description": "Keep GitHub Actions immutable at the major line",
+      "matchManagers": ["github-actions"],
+      "rangeStrategy": "replace"
+    }
+  ]
+}

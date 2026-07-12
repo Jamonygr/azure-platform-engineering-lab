@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/azure-platform-engineering-lab/azure-absence-evidence.schema.json",
+  "title": "Verified Azure absence evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "verifiedAt",
+    "consecutivePasses",
+    "remainingStateResources",
+    "resourceGraphMatchCount",
+    "checkedResourceIds",
+    "checkedResourceGroupNames",
+    "imageRepositoryAbsent"
+  ],
+  "properties": {
+    "verifiedAt": { "type": "string", "format": "date-time" },
+    "consecutivePasses": { "type": "integer", "minimum": 2 },
+    "remainingStateResources": { "const": 0 },
+    "resourceGraphMatchCount": { "const": 0 },
+    "checkedResourceIds": { "type": "array", "uniqueItems": true, "items": { "type": "string", "pattern": "^/subscriptions/" } },
+    "checkedResourceGroupNames": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1, "maxLength": 90 } },
+    "checkedImageRepository": { "type": "string", "pattern": "^apps/[0-9]+$" },
+    "imageRepositoryAbsent": { "const": true }
+  }
+}

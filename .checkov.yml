@@ -1,0 +1,42 @@
+framework:
+  - terraform
+  - github_actions
+compact: true
+quiet: true
+download-external-modules: true
+evaluate-variables: true
+skip-check:
+  # Public HTTPS endpoints are intentional in this disposable teaching lab.
+  - CKV_AZURE_13
+  - CKV_AZURE_14
+  - CKV_AZURE_17
+  - CKV_AZURE_35
+  - CKV_AZURE_56
+  # GitHub-hosted runners and public workload pulls require authenticated public
+  # service endpoints in v1; private endpoints are a production adaptation.
+  - CKV_AZURE_59
+  - CKV_AZURE_139
+  - CKV2_AZURE_33
+  # Queue read/write/delete logging is configured with the replacement
+  # azurerm_storage_account_queue_properties resource; Checkov 3.2.x does not
+  # connect that resource back to the storage account check.
+  - CKV_AZURE_33
+  # Low-cost LRS and Microsoft-managed encryption are deliberate lab defaults.
+  - CKV_AZURE_206
+  - CKV2_AZURE_1
+  # Blob read diagnostics need a separate bootstrap telemetry sink. Lifecycle
+  # evidence and state versioning are included; production should add a sink.
+  - CKV2_AZURE_21
+  # Premium-only controls are documented as production hardening, not defaults.
+  - CKV_AZURE_109
+  - CKV_AZURE_164
+  - CKV_AZURE_165
+  - CKV_AZURE_166
+  - CKV_AZURE_167
+  - CKV_AZURE_233
+  - CKV_AZURE_237
+  # AVM registry modules are exact-version pinned and covered by committed
+  # provider/module lockfiles; a Git commit source would bypass that standard.
+  - CKV_TF_1
+  # GitHub Actions are pinned to immutable commits and reviewed by Dependabot.
+  - CKV_GHA_7

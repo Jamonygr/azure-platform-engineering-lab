@@ -1,0 +1,32 @@
+name: Open or update platform alert
+description: Create one sanitized central issue per alert title and append later failures.
+inputs:
+  token:
+    description: GitHub token with issues:write on the platform repository.
+    required: true
+  title:
+    description: Stable deduplication title.
+    required: true
+  body:
+    description: Sanitized incident summary; never pass credentials or Terraform state.
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Create or append to the deduplicated issue
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+        ALERT_TITLE: ${{ inputs.title }}
+        ALERT_BODY: ${{ inputs.body }}
+      run: |
+        set -euo pipefail
+        run_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+        occurrence=$(printf '%s\n\nWorkflow run: %s\n\nNo credentials, application source, or Terraform state are included.' "$ALERT_BODY" "$run_url")
+        existing=$(gh issue list --state open --label platform-alert --limit 100 --json number,title | \
+          jq -r --arg title "$ALERT_TITLE" '[.[] | select(.title == $title)][0].number // empty')
+        if [[ -n "$existing" ]]; then
+          gh issue comment "$existing" --body "$occurrence"
+        else
+          gh issue create --title "$ALERT_TITLE" --label platform-alert --body "$occurrence"
+        fi

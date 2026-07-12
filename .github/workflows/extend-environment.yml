@@ -1,0 +1,78 @@
+name: Extend environment
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment_id:
+        description: Immutable UUIDv7 environment ID
+        required: true
+        type: string
+      additional_hours:
+        description: Extension duration
+        required: true
+        type: choice
+        default: "4"
+        options:
+          - "4"
+          - "8"
+          - "24"
+
+permissions:
+  contents: read
+  id-token: write
+  issues: write
+
+env:
+  INVENTORY_STORAGE_ACCOUNT: ${{ vars.INVENTORY_STORAGE_ACCOUNT }}
+  TF_STATE_RESOURCE_GROUP: ${{ vars.TF_STATE_RESOURCE_GROUP }}
+  TF_STATE_STORAGE_ACCOUNT: ${{ vars.TF_STATE_STORAGE_ACCOUNT }}
+  TF_STATE_CONTAINER: ${{ vars.TF_STATE_CONTAINER }}
+  TF_LOCK_CONTAINER: ${{ vars.TF_LOCK_CONTAINER }}
+  GENERATED_REPOSITORY_OWNER: ${{ vars.GENERATED_REPOSITORY_OWNER }}
+  GENERATED_OWNER_MODE: ${{ vars.GENERATED_OWNER_MODE }}
+  PLATFORM_ADMINS: ${{ vars.PLATFORM_ADMINS }}
+  PLATFORM_LOG_ANALYTICS_WORKSPACE_ID: ${{ vars.PLATFORM_LOG_ANALYTICS_WORKSPACE_ID }}
+  PLATFORM_LOG_ANALYTICS_WORKSPACE_IDS_JSON: ${{ vars.PLATFORM_LOG_ANALYTICS_WORKSPACE_IDS_JSON }}
+  PLATFORM_ACTION_GROUP_ID: ${{ vars.PLATFORM_ACTION_GROUP_ID }}
+  PLATFORM_ADMIN_EMAIL: ${{ vars.PLATFORM_ADMIN_EMAIL }}
+  SHARED_ACR_ID: ${{ vars.SHARED_ACR_ID }}
+  DEVELOPER_GROUP_OBJECT_ID: ${{ vars.DEVELOPER_GROUP_OBJECT_ID }}
+  PLATFORM_POLICY_DEFINITION_IDS_JSON: ${{ vars.PLATFORM_POLICY_DEFINITION_IDS_JSON }}
+  AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+  AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+  PLATFORM_LOGS_INGESTION_ENDPOINT: ${{ vars.PLATFORM_LOGS_INGESTION_ENDPOINT }}
+  PLATFORM_DCR_IMMUTABLE_ID: ${{ vars.PLATFORM_DCR_IMMUTABLE_ID }}
+  PLATFORM_DCR_STREAM: ${{ vars.PLATFORM_DCR_STREAM }}
+
+concurrency:
+  group: environment-${{ inputs.environment_id }}
+  cancel-in-progress: false
+
+jobs:
+  extend:
+    runs-on: ubuntu-latest
+    environment: lifecycle
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: ./.github/actions/setup-controller
+      - uses: ./.github/actions/setup-conftest
+      - uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5 # v2
+        with:
+          client-id: ${{ vars.AZURE_LIFECYCLE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - shell: pwsh
+        env:
+          ENVIRONMENT_ID: ${{ inputs.environment_id }}
+          ADDITIONAL_HOURS: ${{ inputs.additional_hours }}
+          REQUESTER: ${{ github.actor }}
+          PLATFORM_GITHUB_APP_ID: ${{ vars.PLATFORM_GITHUB_APP_ID }}
+          PLATFORM_GITHUB_APP_PRIVATE_KEY: ${{ secrets.PLATFORM_GITHUB_APP_PRIVATE_KEY }}
+        run: ./scripts/Invoke-Environment.ps1 -Operation Extend
+      - name: Open or update the central lifecycle alert
+        if: failure()
+        uses: ./.github/actions/open-platform-alert
+        with:
+          token: ${{ github.token }}
+          title: "[platform-alert] environment lifecycle operation failed"
+          body: "An environment TTL extension or expiry-propagation operation failed."

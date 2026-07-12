@@ -1,0 +1,13 @@
+{
+  "name": "azure-platform-application-scaffold-contract",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "test": "node --test base/test/*.test.js",
+    "render:check": "node tools/render-check.mjs"
+  }
+}

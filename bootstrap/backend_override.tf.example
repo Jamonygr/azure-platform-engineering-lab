@@ -1,0 +1,6 @@
+# Migrate-BootstrapState.ps1 copies this file to backend_override.tf only after
+# the local bootstrap state and target Azure blob have been checked. The copied
+# file is intentionally ignored by the repository's *_override.tf rule.
+terraform {
+  backend "azurerm" {}
+}

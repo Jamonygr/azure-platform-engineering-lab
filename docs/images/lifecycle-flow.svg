@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="320" viewBox="0 0 1200 320" role="img" aria-labelledby="title desc">
+  <title id="title">Environment lifecycle and repository deletion gate</title>
+  <desc id="desc">Nine lifecycle states flow from requested to deleted. Azure absent is a green verification gate that must occur before the yellow repository deleting state.</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0B1F3A"/>
+      <stop offset="1" stop-color="#0F4C81"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0 0 L10 5 L0 10Z" fill="#79BDE8"/>
+    </marker>
+  </defs>
+  <rect width="1200" height="320" rx="14" fill="url(#background)"/>
+  <g font-family="Segoe UI, Arial, sans-serif">
+    <text x="42" y="49" fill="#FFFFFF" font-size="24" font-weight="700">ENVIRONMENT LIFECYCLE</text>
+    <text x="42" y="74" fill="#BFD5E8" font-size="13">Inventory checkpoints make creation, expiry, recovery, and deletion resumable.</text>
+
+    <g transform="translate(35 112)" font-size="11" font-weight="700" text-anchor="middle">
+      <g>
+        <rect width="112" height="54" rx="9" fill="#24527A" stroke="#79BDE8"/>
+        <text x="56" y="32" fill="#FFFFFF">REQUESTED</text>
+      </g>
+      <path d="M114 27 H130" stroke="#79BDE8" stroke-width="2" marker-end="url(#arrow)"/>
+      <g transform="translate(137)">
+        <rect width="112" height="54" rx="9" fill="#24527A" stroke="#79BDE8"/>
+        <text x="56" y="32" fill="#FFFFFF">REPO_READY</text>
+      </g>
+      <path d="M251 27 H267" stroke="#79BDE8" stroke-width="2" marker-end="url(#arrow)"/>
+      <g transform="translate(274)">
+        <rect width="128" height="54" rx="9" fill="#0078D4"/>
+        <text x="64" y="32" fill="#FFFFFF">AZURE_CREATING</text>
+      </g>
+      <path d="M404 27 H420" stroke="#79BDE8" stroke-width="2" marker-end="url(#arrow)"/>
+      <g transform="translate(427)">
+        <rect width="100" height="54" rx="9" fill="#00B7C3"/>
+        <text x="50" y="32" fill="#0B1F3A">ACTIVE</text>
+      </g>
+      <path d="M529 27 H545" stroke="#79BDE8" stroke-width="2" marker-end="url(#arrow)"/>
+      <g transform="translate(552)">
+        <rect width="108" height="54" rx="9" fill="#24527A" stroke="#79BDE8"/>
+        <text x="54" y="32" fill="#FFFFFF">QUIESCING</text>
+      </g>
+      <path d="M662 27 H678" stroke="#79BDE8" stroke-width="2" marker-end="url(#arrow)"/>
+      <g transform="translate(685)">
+        <rect width="128" height="54" rx="9" fill="#0078D4"/>
+        <text x="64" y="32" fill="#FFFFFF">AZURE_DELETING</text>
+      </g>
+      <path d="M815 27 H831" stroke="#79BDE8" stroke-width="2" marker-end="url(#arrow)"/>
+      <g transform="translate(838)">
+        <rect width="112" height="54" rx="9" fill="#7FBA00"/>
+        <text x="56" y="32" fill="#0B1F3A">AZURE_ABSENT</text>
+      </g>
+      <path d="M952 27 H968" stroke="#FFB900" stroke-width="3" marker-end="url(#arrow)"/>
+      <g transform="translate(975)">
+        <rect width="135" height="54" rx="9" fill="#FFB900"/>
+        <text x="67" y="32" fill="#0B1F3A">REPO_DELETING</text>
+      </g>
+    </g>
+
+    <path d="M1110 166 V204 H1058" fill="none" stroke="#79BDE8" stroke-width="2" marker-end="url(#arrow)"/>
+    <g transform="translate(905 204)">
+      <rect width="150" height="52" rx="10" fill="#7FBA00"/>
+      <text x="75" y="31" text-anchor="middle" fill="#0B1F3A" font-size="12" font-weight="700">DELETED</text>
+    </g>
+    <g transform="translate(35 207)">
+      <circle cx="16" cy="16" r="16" fill="#7FBA00"/>
+      <path d="M8 16 L14 22 L24 10" fill="none" stroke="#0B1F3A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="42" y="13" fill="#FFFFFF" font-size="13" font-weight="700">Hard gate: two Azure absence passes</text>
+      <text x="42" y="33" fill="#BFD5E8" font-size="12">Then resolve GraphQL node ID, validate numeric ID and owner, and only then call GitHub DELETE.</text>
+    </g>
+  </g>
+</svg>

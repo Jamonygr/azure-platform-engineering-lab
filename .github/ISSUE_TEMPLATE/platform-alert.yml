@@ -1,0 +1,37 @@
+name: Platform lifecycle alert
+description: Deduplicated automation alert raised by the reconciler
+title: "[platform-alert] "
+labels: [platform-alert]
+body:
+  - type: markdown
+    attributes:
+      value: Do not include credentials, Terraform state, or application source in this issue.
+  - type: input
+    id: environment
+    attributes:
+      label: Environment ID
+      description: Immutable UUIDv7 identifier
+    validations:
+      required: true
+  - type: dropdown
+    id: phase
+    attributes:
+      label: Lifecycle phase
+      options:
+        - REQUESTED
+        - REPO_READY
+        - AZURE_CREATING
+        - ACTIVE
+        - QUIESCING
+        - AZURE_DELETING
+        - AZURE_ABSENT
+        - REPO_DELETING
+        - DELETED
+    validations:
+      required: true
+  - type: textarea
+    id: summary
+    attributes:
+      label: Sanitized failure summary
+    validations:
+      required: true

@@ -1,0 +1,5 @@
+{
+  "goldenPath": "aks",
+  "delivery": "acr-helm-aks",
+  "containerImage": true
+}

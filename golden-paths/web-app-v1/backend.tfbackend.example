@@ -1,0 +1,6 @@
+resource_group_name  = "rg-platform-bootstrap"
+storage_account_name = "stplatenglab000000"
+container_name       = "tfstate"
+key                  = "workloads/github/web-app-v1/<environment-id>.tfstate"
+use_azuread_auth     = true
+use_oidc             = true

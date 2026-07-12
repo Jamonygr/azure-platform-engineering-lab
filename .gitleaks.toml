@@ -1,0 +1,21 @@
+title = "azure-platform-engineering-lab gitleaks configuration"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Documentation placeholders, zero GUIDs, and generated dependency caches"
+regexes = [
+  '''00000000-0000-0000-0000-000000000000''',
+  '''YOUR_[A-Z0-9_]+''',
+  '''<[^>]+>'''
+]
+paths = [
+  '''docs/.*''',
+  '''wiki/.*''',
+  '''.*\.example''',
+  '''\.external_modules/.*''',
+  '''\.terraform/.*''',
+  '''node_modules/.*''',
+  '''dist/.*'''
+]

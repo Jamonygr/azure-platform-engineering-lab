@@ -1,0 +1,3 @@
+# Microsoft owns the digest-pinned ADE core entrypoint and root operation
+# harness. A USER override in the derived image breaks the managed runner.
+AVD-DS-0002

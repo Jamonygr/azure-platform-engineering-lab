@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="610" viewBox="0 0 1200 610" role="img" aria-labelledby="title desc">
+  <title id="title">Azure Platform Engineering Lab architecture</title>
+  <desc id="desc">A developer uses GitHub Actions to request a path. The platform control plane manages identity, state, inventory, policy, registry, monitoring, and lifecycle. It provisions one isolated Web App, Container App, or AKS workload and later verifies Azure absence before deleting the repository.</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0B1F3A"/>
+      <stop offset="1" stop-color="#102B4D"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10Z" fill="#68D7DD"/>
+    </marker>
+  </defs>
+  <rect width="1200" height="610" rx="16" fill="url(#background)"/>
+  <g font-family="Segoe UI, Arial, sans-serif">
+    <text x="48" y="54" fill="#FFFFFF" font-size="25" font-weight="700">SELF-SERVICE PLATFORM ARCHITECTURE</text>
+    <text x="48" y="80" fill="#BFD5E8" font-size="14">Experience plane → control plane → disposable workload plane</text>
+
+    <g transform="translate(45 112)">
+      <rect width="245" height="172" rx="16" fill="#16385E" stroke="#3D6F98"/>
+      <text x="20" y="31" fill="#68D7DD" font-size="13" font-weight="700">EXPERIENCE PLANE</text>
+      <rect x="20" y="50" width="205" height="43" rx="9" fill="#0078D4"/>
+      <text x="122" y="77" text-anchor="middle" fill="#FFFFFF" font-size="14" font-weight="600">GitHub request form</text>
+      <rect x="20" y="105" width="205" height="43" rx="9" fill="#24527A"/>
+      <text x="122" y="132" text-anchor="middle" fill="#FFFFFF" font-size="14">Generated app repository</text>
+    </g>
+
+    <path d="M290 198 H355" stroke="#68D7DD" stroke-width="3" marker-end="url(#arrow)"/>
+
+    <g transform="translate(365 102)">
+      <rect width="440" height="295" rx="18" fill="#0E2948" stroke="#00B7C3" stroke-width="2"/>
+      <text x="22" y="34" fill="#68D7DD" font-size="13" font-weight="700">PLATFORM CONTROL PLANE</text>
+      <g fill="#193F65" stroke="#3D6F98">
+        <rect x="22" y="54" width="186" height="55" rx="10"/>
+        <rect x="232" y="54" width="186" height="55" rx="10"/>
+        <rect x="22" y="126" width="186" height="55" rx="10"/>
+        <rect x="232" y="126" width="186" height="55" rx="10"/>
+        <rect x="22" y="198" width="186" height="55" rx="10"/>
+        <rect x="232" y="198" width="186" height="55" rx="10"/>
+      </g>
+      <g fill="#FFFFFF" font-size="14" font-weight="600">
+        <text x="115" y="78" text-anchor="middle">Lifecycle controller</text>
+        <text x="115" y="97" text-anchor="middle" fill="#BFD5E8" font-size="11" font-weight="400">lease + ETag + fencing</text>
+        <text x="325" y="78" text-anchor="middle">GitHub App + OIDC</text>
+        <text x="325" y="97" text-anchor="middle" fill="#BFD5E8" font-size="11" font-weight="400">short-lived credentials</text>
+        <text x="115" y="150" text-anchor="middle">State + inventory</text>
+        <text x="115" y="169" text-anchor="middle" fill="#BFD5E8" font-size="11" font-weight="400">Blob + Azure Tables</text>
+        <text x="325" y="150" text-anchor="middle">Policy + budgets</text>
+        <text x="325" y="169" text-anchor="middle" fill="#BFD5E8" font-size="11" font-weight="400">plan and Azure controls</text>
+        <text x="115" y="222" text-anchor="middle">Shared ACR</text>
+        <text x="115" y="241" text-anchor="middle" fill="#BFD5E8" font-size="11" font-weight="400">repository ABAC</text>
+        <text x="325" y="222" text-anchor="middle">Logs + evidence</text>
+        <text x="325" y="241" text-anchor="middle" fill="#BFD5E8" font-size="11" font-weight="400">monitoring + tombstones</text>
+      </g>
+    </g>
+
+    <path d="M805 198 H870" stroke="#68D7DD" stroke-width="3" marker-end="url(#arrow)"/>
+
+    <g transform="translate(880 112)">
+      <rect width="275" height="285" rx="18" fill="#16385E" stroke="#3D6F98"/>
+      <text x="20" y="31" fill="#68D7DD" font-size="13" font-weight="700">WORKLOAD PLANE</text>
+      <rect x="20" y="51" width="235" height="55" rx="10" fill="#0078D4"/>
+      <text x="137" y="77" text-anchor="middle" fill="#FFFFFF" font-size="15" font-weight="700">Web App</text>
+      <text x="137" y="95" text-anchor="middle" fill="#D7E8F7" font-size="11">managed app + insights</text>
+      <rect x="20" y="118" width="235" height="55" rx="10" fill="#00B7C3"/>
+      <text x="137" y="144" text-anchor="middle" fill="#0B1F3A" font-size="15" font-weight="700">Container App</text>
+      <text x="137" y="162" text-anchor="middle" fill="#0B1F3A" font-size="11">revision + scale to zero</text>
+      <rect x="20" y="185" width="235" height="55" rx="10" fill="#FFB900"/>
+      <text x="137" y="211" text-anchor="middle" fill="#0B1F3A" font-size="15" font-weight="700">AKS workload</text>
+      <text x="137" y="229" text-anchor="middle" fill="#0B1F3A" font-size="11">approval + dedicated cluster</text>
+    </g>
+
+    <g transform="translate(45 444)">
+      <rect width="1110" height="115" rx="16" fill="#102F50" stroke="#7FBA00" stroke-width="2"/>
+      <circle cx="52" cy="57" r="27" fill="#7FBA00"/>
+      <path d="M38 57 L48 67 L68 45" fill="none" stroke="#0B1F3A" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="96" y="47" fill="#FFFFFF" font-size="17" font-weight="700">Destructive-safety gate</text>
+      <text x="96" y="72" fill="#D7E8F7" font-size="13">Terraform state empty + tracked IDs absent + RG/node RG absent + Resource Graph tag absent, twice</text>
+      <path d="M760 57 H825" stroke="#7FBA00" stroke-width="3" marker-end="url(#arrow)"/>
+      <rect x="838" y="30" width="230" height="54" rx="10" fill="#7FBA00"/>
+      <text x="953" y="54" text-anchor="middle" fill="#0B1F3A" font-size="14" font-weight="700">Delete repository only now</text>
+      <text x="953" y="72" text-anchor="middle" fill="#0B1F3A" font-size="11">node ID + numeric ID + owner</text>
+    </g>
+  </g>
+</svg>

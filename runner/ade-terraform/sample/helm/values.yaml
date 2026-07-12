@@ -1,0 +1,27 @@
+replicaCount: 1
+
+image:
+  repository: ""
+  tag: ""
+  pullPolicy: Always
+
+environment:
+  id: ""
+  name: ""
+  region: ""
+
+service:
+  port: 80
+  targetPort: 3000
+
+ingress:
+  className: webapprouting.kubernetes.azure.com
+  host: ""
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 250m
+    memory: 256Mi

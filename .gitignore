@@ -1,0 +1,54 @@
+# Terraform
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+
+# Local configuration and generated ADE catalog
+*.auto.tfvars
+*.auto.tfvars.json
+terraform.tfvars
+!*.tfvars.example
+.generated/
+ade-catalog/
+
+# Node / TypeScript
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+.npm/
+
+# Test and tool output
+.pytest_cache/
+.cache/
+.external_modules/
+.terraform-test-data/
+test-results/
+reports/
+*.sarif
+*.log
+
+# Local credentials and environment files
+.env
+.env.*
+!.env.example
+*.pem
+*.pfx
+*.key
+
+# Editors and OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json

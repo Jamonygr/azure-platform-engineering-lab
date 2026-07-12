@@ -1,0 +1,241 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  controller:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: ./.github/actions/setup-controller
+      - run: npm test --prefix controller
+      - run: npm run build --prefix controller
+
+  scaffold:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "24"
+      - run: npm ci --prefix scaffolds/application
+      - run: npm test --prefix scaffolds/application
+      - run: npm run render:check --prefix scaffolds/application
+      - name: Build the generated application container contract
+        run: docker build --tag golden-path-scaffold:test scaffolds/application/base
+
+  runner:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3
+        with:
+          terraform_version: "1.15.8"
+      - run: bash tests/runner/contract.sh
+      - run: bash tests/runner/smoke.sh
+      - run: docker build -t ade-terraform-runner:test runner/ade-terraform
+
+  terraform:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3
+        with:
+          terraform_version: "1.15.8"
+      - uses: ./.github/actions/setup-conftest
+      - name: Format check
+        run: terraform fmt -check -recursive
+      - name: Verify committed Terraform lockfile coverage
+        shell: bash
+        run: |
+          set -euo pipefail
+          roots=(
+            bootstrap
+            platform
+            golden-paths/web-app-v1
+            golden-paths/container-app-v1
+            golden-paths/aks-workload-v1
+            tests/terraform
+          )
+          for directory in "${roots[@]}"; do
+            test -s "${directory}/.terraform.lock.hcl" || {
+              echo "Missing committed lockfile: ${directory}/.terraform.lock.hcl" >&2
+              exit 1
+            }
+          done
+          sha256sum "${roots[@]/%//.terraform.lock.hcl}" > "$RUNNER_TEMP/terraform-locks.before"
+      - name: Validate every Terraform root with immutable lockfiles
+        shell: bash
+        run: |
+          set -euo pipefail
+          roots=(
+            bootstrap
+            platform
+            golden-paths/web-app-v1
+            golden-paths/container-app-v1
+            golden-paths/aks-workload-v1
+          )
+          for directory in "${roots[@]}"; do
+            echo "Validating ${directory}"
+            terraform -chdir="${directory}" init -backend=false -input=false -lockfile=readonly
+            terraform -chdir="${directory}" validate
+          done
+      - name: Run mocked Terraform contracts
+        run: |
+          terraform -chdir=tests/terraform init -backend=false -input=false -lockfile=readonly
+          terraform -chdir=tests/terraform test
+      - name: Prove Terraform initialization did not rewrite lockfiles
+        shell: bash
+        run: |
+          set -euo pipefail
+          roots=(
+            bootstrap
+            platform
+            golden-paths/web-app-v1
+            golden-paths/container-app-v1
+            golden-paths/aks-workload-v1
+            tests/terraform
+          )
+          sha256sum "${roots[@]/%//.terraform.lock.hcl}" > "$RUNNER_TEMP/terraform-locks.after"
+          diff --unified "$RUNNER_TEMP/terraform-locks.before" "$RUNNER_TEMP/terraform-locks.after"
+      - name: Verify enforced Terraform plan policies
+        run: |
+          conftest fmt --check policies/opa
+          conftest verify --policy policies/opa
+      - name: Verify cross-root lifecycle contracts
+        shell: pwsh
+        run: ./tests/terraform/verify-contracts.ps1
+
+  terraform-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - name: Reject generated Terraform reference drift
+        uses: terraform-docs/gh-actions@6de6da0cefcc6b4b7a5cbea4d79d97060733093c # v1.4.1
+        with:
+          working-dir: bootstrap,platform,golden-paths/web-app-v1,golden-paths/container-app-v1,golden-paths/aks-workload-v1
+          output-file: TERRAFORM.md
+          output-method: inject
+          fail-on-diff: "true"
+          git-push: "false"
+
+  terraform-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: terraform-linters/setup-tflint@90f302c255ef959cbfb4bd10581afecdb7ece3e6 # v4
+      - name: TFLint all roots
+        run: |
+          tflint --init
+          tflint --recursive --format compact
+      - name: Checkov Terraform policy scan
+        uses: bridgecrewio/checkov-action@7b972723c44fb3d256283fac96fae5d7c1894bb7 # v12
+        with:
+          directory: .
+          framework: terraform
+          quiet: true
+          soft_fail: false
+
+  supply-chain:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0
+      - name: Secret history scan
+        uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2
+      - name: Filesystem vulnerability and misconfiguration scan
+        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8 # v0.33.1
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: vuln,secret,misconfig
+          severity: HIGH,CRITICAL
+          exit-code: "1"
+
+  shell-container-helm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - name: ShellCheck
+        run: shellcheck runner/ade-terraform/scripts/*.sh tests/runner/*.sh scaffolds/application/base/.platform/*.sh
+      - name: Hadolint
+        uses: hadolint/hadolint-action@54c9adbab1582c2ef04b2016b760714a4bfde3cf # v3.1.0
+        with:
+          dockerfile: runner/ade-terraform/Dockerfile
+          failure-threshold: error
+      - uses: azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4 # v4
+      - name: Helm lint and Kubernetes schema validation
+        run: |
+          helm lint scaffolds/application/overlays/aks/helm \
+            --set image.repository=example.azurecr.io/apps/123:sha \
+            --set ingress.host=app.example.invalid \
+            --set environment.id=018f3f2a-7b6c-7def-8abc-0123456789ab
+          helm template golden-path scaffolds/application/overlays/aks/helm \
+            --set image.repository=example.azurecr.io/apps/123:sha \
+            --set ingress.host=app.example.invalid \
+            --set environment.id=018f3f2a-7b6c-7def-8abc-0123456789ab \
+            | docker run --rm -i ghcr.io/yannh/kubeconform@sha256:85dbef6b4b312b99133decc9c6fc9495e9fc5f92293d4ff3b7e1b30f5611823c -strict -summary
+
+  documentation-links:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - name: Markdown style check
+        uses: DavidAnson/markdownlint-cli2-action@8de2aa07cae85fd17c0b35642db70cf5495f1d25 # v24.0.0
+        with:
+          globs: |
+            **/*.md
+            !**/.terraform/**
+            !**/node_modules/**
+            !**/TERRAFORM.md
+      - name: Markdown and local-link check
+        uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8 # v2
+        with:
+          args: --no-progress --accept 200,429 --exclude '^https://github\.com/__PLATFORM_REPOSITORY__$' "**/*.md"
+          fail: true
+
+  workflow-policy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - name: Reject static Azure credentials
+        shell: pwsh
+        run: ./scripts/Test-NoStaticCredentials.ps1
+      - name: Parse committed JSON schemas and policy definitions
+        shell: pwsh
+        run: |
+          Get-ChildItem schemas,policies/definitions -Filter *.json -Recurse | ForEach-Object {
+            Get-Content -LiteralPath $_.FullName -Raw | ConvertFrom-Json | Out-Null
+          }
+      - name: Validate bounded propagation safety contracts
+        shell: pwsh
+        run: ./tests/scripts/Test-PropagationContracts.ps1
+      - name: Validate destructive platform safety contracts
+        shell: pwsh
+        run: ./tests/scripts/Test-PlatformSafetyContracts.ps1
+      - name: Validate lifecycle quiesce and inventory contracts
+        shell: pwsh
+        run: ./tests/scripts/Test-LifecycleSafetyContracts.ps1
+      - name: Validate GitHub trust-boundary contracts
+        shell: pwsh
+        run: ./tests/scripts/Test-GitHubTrustContracts.ps1
+      - name: Validate workflow syntax
+        uses: docker://rhysd/actionlint@sha256:887a259a5a534f3c4f36cb02dca341673c6089431057242cdc931e9f133147e9 # 1.7.7
+      - name: Validate generated-repository workflow syntax
+        uses: docker://rhysd/actionlint@sha256:887a259a5a534f3c4f36cb02dca341673c6089431057242cdc931e9f133147e9 # 1.7.7
+        with:
+          args: scaffolds/application/base/.github/workflows/deploy.yml

@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="320" viewBox="0 0 1200 320" role="img" aria-labelledby="title desc">
+  <title id="title">Azure Platform Engineering Lab book-style guide</title>
+  <desc id="desc">A navy banner with an open-book icon and a sequence from developer request to golden path, governed Azure endpoint, and verified cleanup.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0B1F3A"/>
+      <stop offset="1" stop-color="#0F4C81"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="320" rx="14" fill="url(#bg)"/>
+  <g font-family="Segoe UI, Arial, sans-serif">
+    <g transform="translate(62 72)">
+      <path d="M0 18 Q58 -7 116 22 V145 Q58 116 0 142Z" fill="#FFFFFF" opacity="0.96"/>
+      <path d="M116 22 Q174 -7 232 18 V142 Q174 116 116 145Z" fill="#D7E8F7"/>
+      <path d="M116 22 V145" stroke="#0078D4" stroke-width="4"/>
+      <path d="M22 47 Q58 34 94 48 M22 73 Q58 60 94 74 M138 48 Q174 34 210 47 M138 74 Q174 60 210 73" fill="none" stroke="#79A4C7" stroke-width="4" stroke-linecap="round"/>
+    </g>
+    <text x="350" y="98" fill="#FFFFFF" font-size="40" font-weight="700">Book-Style Guide</text>
+    <text x="350" y="136" fill="#D7E8F7" font-size="18">From platform product intent to safe, observable deletion.</text>
+    <g transform="translate(350 178)" font-size="13" font-weight="700" text-anchor="middle">
+      <rect width="140" height="44" rx="10" fill="#0078D4"/>
+      <text x="70" y="28" fill="#FFFFFF">Request</text>
+      <path d="M140 22 H170" stroke="#79BDE8" stroke-width="3"/>
+      <rect x="171" width="140" height="44" rx="10" fill="#00B7C3"/>
+      <text x="241" y="28" fill="#0B1F3A">Golden path</text>
+      <path d="M311 22 H341" stroke="#79BDE8" stroke-width="3"/>
+      <rect x="342" width="140" height="44" rx="10" fill="#FFB900"/>
+      <text x="412" y="28" fill="#0B1F3A">Govern</text>
+      <path d="M482 22 H512" stroke="#79BDE8" stroke-width="3"/>
+      <rect x="513" width="140" height="44" rx="10" fill="#7FBA00"/>
+      <text x="583" y="28" fill="#0B1F3A">Verify cleanup</text>
+    </g>
+  </g>
+</svg>

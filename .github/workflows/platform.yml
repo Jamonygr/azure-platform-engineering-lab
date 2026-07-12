@@ -1,0 +1,60 @@
+name: Platform infrastructure
+
+on:
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: Terraform operation
+        required: true
+        type: choice
+        default: plan
+        options:
+          - plan
+          - apply
+          - destroy
+      destroy_confirmation:
+        description: For destroy, type DESTROY PLATFORM
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  INVENTORY_STORAGE_ACCOUNT: ${{ vars.INVENTORY_STORAGE_ACCOUNT }}
+  TF_STATE_RESOURCE_GROUP: ${{ vars.TF_STATE_RESOURCE_GROUP }}
+  TF_STATE_STORAGE_ACCOUNT: ${{ vars.TF_STATE_STORAGE_ACCOUNT }}
+  TF_STATE_CONTAINER: ${{ vars.TF_STATE_CONTAINER }}
+  TF_VAR_unique_suffix: ${{ vars.PLATFORM_UNIQUE_SUFFIX }}
+  TF_VAR_platform_admin_email: ${{ vars.PLATFORM_ADMIN_EMAIL }}
+  TF_VAR_github_owner: ${{ github.repository_owner }}
+  TF_VAR_github_repository: ${{ github.event.repository.name }}
+  TF_VAR_bootstrap_storage_account_id: ${{ vars.BOOTSTRAP_STORAGE_ACCOUNT_ID }}
+  TF_VAR_enable_ade: ${{ vars.ENABLE_ADE || false }}
+  TF_VAR_developer_group_object_id: ${{ vars.DEVELOPER_GROUP_OBJECT_ID }}
+
+concurrency:
+  group: platform-infrastructure
+  cancel-in-progress: false
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    environment: platform-operations
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: ./.github/actions/setup-controller
+      - uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5 # v2
+        with:
+          client-id: ${{ vars.AZURE_PLATFORM_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: Plan or apply platform
+        shell: pwsh
+        env:
+          TF_VAR_subscription_id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+          TF_VAR_tenant_id: ${{ vars.AZURE_TENANT_ID }}
+          PLATFORM_OPERATION: ${{ inputs.operation }}
+          DESTROY_CONFIRMATION: ${{ inputs.destroy_confirmation }}
+        run: ./scripts/Invoke-Platform.ps1 -Operation $env:PLATFORM_OPERATION

@@ -1,0 +1,21 @@
+replicaCount: 1
+image:
+  repository: ""
+  tag: ""
+  pullPolicy: IfNotPresent
+service:
+  port: 80
+ingress:
+  host: ""
+environment:
+  id: ""
+  name: ""
+  region: ""
+  version: "development"
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 250m
+    memory: 256Mi

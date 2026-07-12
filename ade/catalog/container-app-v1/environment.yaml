@@ -1,0 +1,60 @@
+# yaml-language-server: $schema=https://github.com/Azure/deployment-environments/releases/download/2022-11-11-preview/manifest.schema.json
+name: Container App v1
+version: 1.0.0
+summary: Low-cost Azure Container App golden path
+description: Optional ADE maintenance-mode compatibility definition using the shared ABAC registry and fixed Node.js 24 sample.
+runner: "__ADE_RUNNER_IMAGE__"
+templatePath: main.tf
+parameters:
+  - id: golden_path
+    name: Immutable runner golden path
+    type: string
+    default: container-app
+    readOnly: true
+  - id: sample_delivery
+    name: Deliver the fixed sample
+    type: boolean
+    default: true
+    readOnly: true
+  - id: location
+    name: Azure region
+    type: string
+    default: westeurope
+    allowed: [westeurope, northeurope, germanywestcentral]
+    required: true
+  - id: ttl_hours
+    name: Time to live (hours)
+    type: integer
+    default: 24
+    allowed: ["4", "8", "24", "48", "72"]
+    required: true
+  - id: shared_acr_id
+    name: Shared Azure Container Registry
+    type: string
+    default: "__SHARED_ACR_ID__"
+    readOnly: true
+  - id: log_analytics_workspace_ids
+    name: Same-region shared Log Analytics workspaces
+    type: object
+    default: __LOG_ANALYTICS_WORKSPACE_IDS_JSON__
+    readOnly: true
+  - id: action_group_id
+    name: Platform action group
+    type: string
+    default: "__ACTION_GROUP_ID__"
+    readOnly: true
+  - id: platform_admin_email
+    name: Platform administrator
+    type: string
+    default: "__PLATFORM_ADMIN_EMAIL__"
+    readOnly: true
+  - id: policy_definition_ids
+    name: Platform policy definitions
+    type: object
+    default: __POLICY_DEFINITION_IDS_JSON__
+    readOnly: true
+  - id: budget_amount
+    name: Monthly alert budget
+    type: number
+    default: 15
+    readOnly: true

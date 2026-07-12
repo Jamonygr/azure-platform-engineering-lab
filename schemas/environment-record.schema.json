@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/azure-platform-engineering-lab/environment-record.schema.json",
+  "title": "Authoritative platform environment inventory record",
+  "type": "object",
+  "required": [
+    "environmentId",
+    "partitionKey",
+    "phase",
+    "desiredState",
+    "owner",
+    "goldenPath",
+    "pathVersion",
+    "environmentName",
+    "location",
+    "requestedRepositoryName",
+    "createdAt",
+    "updatedAt",
+    "expiresAt",
+    "stateKey",
+    "resourceGroupNames",
+    "resourceIds",
+    "attempts",
+    "fencingGeneration"
+  ],
+  "properties": {
+    "environmentId": { "type": "string", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$" },
+    "partitionKey": { "const": "environment" },
+    "phase": { "enum": ["REQUESTED", "REPO_READY", "AZURE_CREATING", "ACTIVE", "QUIESCING", "AZURE_DELETING", "AZURE_ABSENT", "REPO_DELETING", "DELETED"] },
+    "desiredState": { "enum": ["ACTIVE", "DELETED"] },
+    "owner": { "type": "string", "minLength": 1 },
+    "goldenPath": { "enum": ["web-app", "container-app", "aks"] },
+    "pathVersion": { "const": "v1" },
+    "environmentName": { "type": "string", "minLength": 3, "maxLength": 20 },
+    "location": { "enum": ["westeurope", "northeurope", "germanywestcentral"] },
+    "requestedRepositoryName": { "type": "string", "minLength": 3, "maxLength": 50 },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "updatedAt": { "type": "string", "format": "date-time" },
+    "expiresAt": { "type": "string", "format": "date-time" },
+    "stateKey": { "type": "string", "pattern": "^workloads/github/(web-app-v1|container-app-v1|aks-workload-v1)/.+\\.tfstate$" },
+    "repository": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["owner", "name", "numericId", "nodeId", "htmlUrl"],
+      "properties": {
+        "owner": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "numericId": { "type": "integer", "minimum": 1 },
+        "nodeId": { "type": "string", "minLength": 6 },
+        "htmlUrl": { "type": "string", "format": "uri", "pattern": "^https://github\\.com/" }
+      }
+    },
+    "resourceGroupNames": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1, "maxLength": 90 } },
+    "resourceIds": { "type": "array", "uniqueItems": true, "items": { "type": "string", "pattern": "^/subscriptions/" } },
+    "imageRepository": { "type": "string", "pattern": "^apps/[0-9]+$" },
+    "sharedAcrId": { "type": "string", "pattern": "^/subscriptions/.+/providers/Microsoft\\.ContainerRegistry/registries/[^/]+$" },
+    "endpoint": { "type": "string", "format": "uri", "pattern": "^https://" },
+    "attempts": { "type": "integer", "minimum": 0 },
+    "fencingGeneration": { "type": "integer", "minimum": 1 },
+    "evidenceHash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "lastErrorCode": { "type": "string", "maxLength": 80 },
+    "lastErrorSummary": { "type": "string", "maxLength": 1000 },
+    "nextAttemptAt": { "type": "string", "format": "date-time" },
+    "repositoryObservedAbsentAt": { "type": "string", "format": "date-time" },
+    "repositoryDeleteIssuedAt": { "type": "string", "format": "date-time" },
+    "expirySyncPending": { "type": "boolean" },
+    "etag": { "type": "string" },
+    "azureAbsence": { "$ref": "azure-absence-evidence.schema.json" }
+  },
+  "allOf": [
+    {
+      "if": { "required": ["repositoryObservedAbsentAt"] },
+      "then": { "required": ["repository"] }
+    }
+  ],
+  "additionalProperties": false
+}

@@ -1,0 +1,6 @@
+apiVersion: v2
+name: ade-node-sample
+description: Fixed Node.js sample for the optional ADE AKS compatibility path
+type: application
+version: 1.0.0
+appVersion: "1.0.0"

@@ -1,0 +1,18 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+  - package-ecosystem: npm
+    directory: /controller
+    schedule:
+      interval: weekly
+  - package-ecosystem: npm
+    directory: /scaffolds/application
+    schedule:
+      interval: weekly
+  - package-ecosystem: docker
+    directory: /runner/ade-terraform
+    schedule:
+      interval: weekly

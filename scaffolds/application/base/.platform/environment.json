@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "environmentId": "__ENVIRONMENT_ID__",
+  "environmentName": "__ENVIRONMENT_NAME__",
+  "goldenPath": "__GOLDEN_PATH__",
+  "expiresAt": "__EXPIRES_AT__",
+  "platformRepository": "__PLATFORM_REPOSITORY__",
+  "managed": true
+}

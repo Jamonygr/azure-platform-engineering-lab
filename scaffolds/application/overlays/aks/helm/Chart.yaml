@@ -1,0 +1,6 @@
+apiVersion: v2
+name: golden-path-node-service
+description: Disposable AKS golden-path workload
+type: application
+version: 1.0.0
+appVersion: "1.0.0"

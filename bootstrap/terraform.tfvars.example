@@ -1,0 +1,8 @@
+storage_account_name = "stplatenglab000000"
+github_owner         = "your-github-owner"
+github_repository    = "azure-platform-engineering-lab"
+
+tags = {
+  owner       = "platform-team"
+  environment = "lab"
+}

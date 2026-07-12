@@ -1,0 +1,42 @@
+name: Lifecycle heartbeat watchdog
+
+on:
+  schedule:
+    - cron: "7 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+  issues: write
+
+env:
+  INVENTORY_STORAGE_ACCOUNT: ${{ vars.INVENTORY_STORAGE_ACCOUNT }}
+
+concurrency:
+  group: lifecycle-heartbeat-watchdog
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    environment: lifecycle
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: ./.github/actions/setup-controller
+      - uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5 # v2
+        with:
+          client-id: ${{ vars.AZURE_LIFECYCLE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: Require a recent successful reconciliation
+        env:
+          HEARTBEAT_MAX_AGE_MINUTES: "35"
+        run: node --experimental-strip-types controller/src/cli.ts heartbeat-status
+      - name: Open one deduplicated missing-heartbeat alert
+        if: failure()
+        uses: ./.github/actions/open-platform-alert
+        with:
+          token: ${{ github.token }}
+          title: "[platform-alert] lifecycle reconciler heartbeat missing"
+          body: "No recent successful lifecycle heartbeat was found; review the reconciler and watchdog schedules."

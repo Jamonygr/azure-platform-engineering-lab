@@ -1,0 +1,5 @@
+{
+  "goldenPath": "container-app",
+  "delivery": "acr-container-app-revision",
+  "containerImage": true
+}

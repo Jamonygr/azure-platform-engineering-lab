@@ -1,0 +1,182 @@
+name: Request environment
+
+on:
+  workflow_dispatch:
+    inputs:
+      golden_path:
+        description: Golden path to provision
+        required: true
+        type: choice
+        default: web-app
+        options:
+          - web-app
+          - container-app
+          - aks
+      environment_name:
+        description: Lowercase environment slug (3-20 characters)
+        required: true
+        type: string
+      repository_name:
+        description: Lowercase generated repository slug (3-50 characters)
+        required: true
+        type: string
+      location:
+        description: Azure region
+        required: true
+        type: choice
+        default: westeurope
+        options:
+          - westeurope
+          - northeurope
+          - germanywestcentral
+      ttl_hours:
+        description: Time to live
+        required: true
+        type: choice
+        default: "24"
+        options:
+          - "4"
+          - "8"
+          - "24"
+          - "48"
+          - "72"
+      acknowledge_aks_cost:
+        description: I acknowledge the AKS cost profile (required for AKS)
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+env:
+  INVENTORY_STORAGE_ACCOUNT: ${{ vars.INVENTORY_STORAGE_ACCOUNT }}
+  TF_STATE_RESOURCE_GROUP: ${{ vars.TF_STATE_RESOURCE_GROUP }}
+  TF_STATE_STORAGE_ACCOUNT: ${{ vars.TF_STATE_STORAGE_ACCOUNT }}
+  TF_STATE_CONTAINER: ${{ vars.TF_STATE_CONTAINER }}
+  TF_LOCK_CONTAINER: ${{ vars.TF_LOCK_CONTAINER }}
+  GENERATED_REPOSITORY_OWNER: ${{ vars.GENERATED_REPOSITORY_OWNER }}
+  GENERATED_OWNER_MODE: ${{ vars.GENERATED_OWNER_MODE }}
+  ORGANIZATION_REQUESTERS: ${{ vars.ORGANIZATION_REQUESTERS }}
+  TEMPLATE_REPOSITORY_OWNER: ${{ vars.TEMPLATE_REPOSITORY_OWNER }}
+  TEMPLATE_REPOSITORY_NAME: ${{ vars.TEMPLATE_REPOSITORY_NAME }}
+  PLATFORM_LOG_ANALYTICS_WORKSPACE_ID: ${{ vars.PLATFORM_LOG_ANALYTICS_WORKSPACE_ID }}
+  PLATFORM_LOG_ANALYTICS_WORKSPACE_IDS_JSON: ${{ vars.PLATFORM_LOG_ANALYTICS_WORKSPACE_IDS_JSON }}
+  PLATFORM_ACTION_GROUP_ID: ${{ vars.PLATFORM_ACTION_GROUP_ID }}
+  PLATFORM_ADMIN_EMAIL: ${{ vars.PLATFORM_ADMIN_EMAIL }}
+  PLATFORM_ADMINS: ${{ vars.PLATFORM_ADMINS }}
+  SHARED_ACR_ID: ${{ vars.SHARED_ACR_ID }}
+  DEVELOPER_GROUP_OBJECT_ID: ${{ vars.DEVELOPER_GROUP_OBJECT_ID }}
+  PLATFORM_POLICY_DEFINITION_IDS_JSON: ${{ vars.PLATFORM_POLICY_DEFINITION_IDS_JSON }}
+  AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+  AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+  ENABLE_REPOSITORY_DELETE: ${{ vars.ENABLE_REPOSITORY_DELETE }}
+  PLATFORM_LOGS_INGESTION_ENDPOINT: ${{ vars.PLATFORM_LOGS_INGESTION_ENDPOINT }}
+  PLATFORM_DCR_IMMUTABLE_ID: ${{ vars.PLATFORM_DCR_IMMUTABLE_ID }}
+  PLATFORM_DCR_STREAM: ${{ vars.PLATFORM_DCR_STREAM }}
+
+concurrency:
+  group: request-${{ inputs.repository_name }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    outputs:
+      request_json: ${{ steps.validate.outputs.request_json }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: ./.github/actions/setup-controller
+      - id: validate
+        name: Validate request before creating anything
+        shell: pwsh
+        env:
+          GOLDEN_PATH: ${{ inputs.golden_path }}
+          ENVIRONMENT_NAME: ${{ inputs.environment_name }}
+          REPOSITORY_NAME: ${{ inputs.repository_name }}
+          LOCATION: ${{ inputs.location }}
+          TTL_HOURS: ${{ inputs.ttl_hours }}
+          ACKNOWLEDGE_AKS_COST: ${{ inputs.acknowledge_aks_cost }}
+          REQUESTER: ${{ github.actor }}
+        run: |
+          ./scripts/Invoke-Environment.ps1 -Operation Validate
+
+  provision-automatic:
+    if: inputs.golden_path != 'aks'
+    needs: validate
+    runs-on: ubuntu-latest
+    environment: lifecycle
+    permissions:
+      contents: read
+      id-token: write
+      issues: write
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: ./.github/actions/setup-controller
+      - uses: ./.github/actions/setup-conftest
+      - uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5 # v2
+        with:
+          client-id: ${{ vars.AZURE_LIFECYCLE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: Provision environment transaction
+        shell: pwsh
+        env:
+          GOLDEN_PATH: ${{ inputs.golden_path }}
+          ENVIRONMENT_NAME: ${{ inputs.environment_name }}
+          REPOSITORY_NAME: ${{ inputs.repository_name }}
+          LOCATION: ${{ inputs.location }}
+          TTL_HOURS: ${{ inputs.ttl_hours }}
+          ACKNOWLEDGE_AKS_COST: ${{ inputs.acknowledge_aks_cost }}
+          REQUESTER: ${{ github.actor }}
+          PLATFORM_GITHUB_APP_ID: ${{ vars.PLATFORM_GITHUB_APP_ID }}
+          PLATFORM_GITHUB_APP_PRIVATE_KEY: ${{ secrets.PLATFORM_GITHUB_APP_PRIVATE_KEY }}
+          PLATFORM_REPOSITORY: ${{ github.repository }}
+        run: ./scripts/Invoke-Environment.ps1 -Operation Request
+      - name: Open or update the central lifecycle alert
+        if: failure()
+        uses: ./.github/actions/open-platform-alert
+        with:
+          token: ${{ github.token }}
+          title: "[platform-alert] environment lifecycle operation failed"
+          body: "An automatic golden-path request failed. Authoritative inventory and cleanup retries remain with the lifecycle controller."
+
+  provision-aks:
+    if: inputs.golden_path == 'aks'
+    needs: validate
+    runs-on: ubuntu-latest
+    environment: aks-approval
+    permissions:
+      contents: read
+      id-token: write
+      issues: write
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: ./.github/actions/setup-controller
+      - uses: ./.github/actions/setup-conftest
+      - uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5 # v2
+        with:
+          client-id: ${{ vars.AZURE_LIFECYCLE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: Provision approved AKS environment
+        shell: pwsh
+        env:
+          GOLDEN_PATH: ${{ inputs.golden_path }}
+          ENVIRONMENT_NAME: ${{ inputs.environment_name }}
+          REPOSITORY_NAME: ${{ inputs.repository_name }}
+          LOCATION: ${{ inputs.location }}
+          TTL_HOURS: ${{ inputs.ttl_hours }}
+          ACKNOWLEDGE_AKS_COST: ${{ inputs.acknowledge_aks_cost }}
+          REQUESTER: ${{ github.actor }}
+          PLATFORM_GITHUB_APP_ID: ${{ vars.PLATFORM_GITHUB_APP_ID }}
+          PLATFORM_GITHUB_APP_PRIVATE_KEY: ${{ secrets.PLATFORM_GITHUB_APP_PRIVATE_KEY }}
+          PLATFORM_REPOSITORY: ${{ github.repository }}
+        run: ./scripts/Invoke-Environment.ps1 -Operation Request
+      - name: Open or update the central lifecycle alert
+        if: failure()
+        uses: ./.github/actions/open-platform-alert
+        with:
+          token: ${{ github.token }}
+          title: "[platform-alert] environment lifecycle operation failed"
+          body: "An approved AKS golden-path request failed. Authoritative inventory and cleanup retries remain with the lifecycle controller."

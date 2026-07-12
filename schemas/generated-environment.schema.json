@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/azure-platform-engineering-lab/generated-environment.schema.json",
+  "title": "Generated repository platform metadata",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "environmentId", "environmentName", "goldenPath", "expiresAt", "platformRepository", "managed"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "environmentId": { "type": "string", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$" },
+    "environmentName": { "type": "string", "pattern": "^[a-z][a-z0-9-]{1,18}[a-z0-9]$" },
+    "goldenPath": { "enum": ["web-app", "container-app", "aks"] },
+    "expiresAt": { "type": "string", "format": "date-time" },
+    "platformRepository": { "type": "string", "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$" },
+    "managed": { "const": true }
+  }
+}

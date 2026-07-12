@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="320" viewBox="0 0 1200 320" role="img" aria-labelledby="title desc">
+  <title id="title">Azure Platform Engineering Lab documentation</title>
+  <desc id="desc">A documentation banner with connected cards for architecture, golden paths, lifecycle, governance, testing, and certification learning.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0B1F3A"/>
+      <stop offset="1" stop-color="#0F4C81"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="320" rx="14" fill="url(#bg)"/>
+  <circle cx="1120" cy="20" r="105" fill="#FFFFFF" opacity="0.04"/>
+  <g font-family="Segoe UI, Arial, sans-serif">
+    <text x="60" y="95" fill="#FFFFFF" font-size="40" font-weight="700">Platform Engineering Lab Docs</text>
+    <text x="60" y="133" fill="#D7E8F7" font-size="18">Build the path. Operate the lifecycle. Prove the teardown.</text>
+    <g transform="translate(60 175)" font-size="13" font-weight="700" text-anchor="middle">
+      <rect width="150" height="54" rx="12" fill="#0078D4"/>
+      <text x="75" y="33" fill="#FFFFFF">Architecture</text>
+      <path d="M150 27 H173" stroke="#79BDE8" stroke-width="2"/>
+      <rect x="174" width="150" height="54" rx="12" fill="#00B7C3"/>
+      <text x="249" y="33" fill="#0B1F3A">Golden paths</text>
+      <path d="M324 27 H347" stroke="#79BDE8" stroke-width="2"/>
+      <rect x="348" width="150" height="54" rx="12" fill="#7FBA00"/>
+      <text x="423" y="33" fill="#0B1F3A">Lifecycle</text>
+      <path d="M498 27 H521" stroke="#79BDE8" stroke-width="2"/>
+      <rect x="522" width="150" height="54" rx="12" fill="#24527A" stroke="#79BDE8"/>
+      <text x="597" y="33" fill="#FFFFFF">Governance</text>
+      <path d="M672 27 H695" stroke="#79BDE8" stroke-width="2"/>
+      <rect x="696" width="150" height="54" rx="12" fill="#FFB900"/>
+      <text x="771" y="33" fill="#0B1F3A">Testing</text>
+      <path d="M846 27 H869" stroke="#79BDE8" stroke-width="2"/>
+      <rect x="870" width="180" height="54" rx="12" fill="#16385E" stroke="#00B7C3"/>
+      <text x="960" y="33" fill="#FFFFFF">AZ-305 · AZ-400</text>
+    </g>
+  </g>
+</svg>

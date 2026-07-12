@@ -1,0 +1,9 @@
+unique_suffix               = "000000"
+platform_admin_email        = "platform-admin@example.com"
+github_owner                = "your-github-owner"
+github_repository           = "azure-platform-engineering-lab"
+bootstrap_storage_account_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-platform-bootstrap/providers/Microsoft.Storage/storageAccounts/stplatenglab000000"
+
+# ADE is optional and disabled by default because the service is in maintenance mode.
+enable_ade                 = false
+developer_group_object_id = null

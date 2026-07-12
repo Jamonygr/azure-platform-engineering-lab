@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/azure-platform-engineering-lab/environment-request.schema.json",
+  "title": "Self-service environment request",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "goldenPath",
+    "environmentName",
+    "repositoryName",
+    "location",
+    "ttlHours",
+    "acknowledgeAksCost",
+    "requester"
+  ],
+  "properties": {
+    "goldenPath": { "enum": ["web-app", "container-app", "aks"] },
+    "environmentName": { "type": "string", "pattern": "^[a-z][a-z0-9-]{1,18}[a-z0-9]$" },
+    "repositoryName": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{1,48}[a-z0-9]$" },
+    "location": { "enum": ["westeurope", "northeurope", "germanywestcentral"] },
+    "ttlHours": { "enum": [4, 8, 24, 48, 72] },
+    "acknowledgeAksCost": { "type": "boolean" },
+    "requester": { "type": "string", "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$" }
+  }
+}

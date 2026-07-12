@@ -1,0 +1,14 @@
+{
+  "name": "azure-platform-engineering-lab-sample",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Fixed Node.js 24 sample delivered by the optional ADE compatibility runner.",
+  "license": "MIT",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test"
+  }
+}

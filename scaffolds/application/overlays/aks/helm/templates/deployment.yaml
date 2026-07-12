@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "golden-path.name" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "golden-path.name" . }}
+    platform.environment_id: {{ .Values.environment.id | quote }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "golden-path.name" . }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "golden-path.name" . }}
+        platform.environment_id: {{ .Values.environment.id | quote }}
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: application
+          image: {{ if .Values.image.tag }}"{{ .Values.image.repository }}:{{ .Values.image.tag }}"{{ else }}"{{ .Values.image.repository }}"{{ end }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            readOnlyRootFilesystem: true
+          ports:
+            - name: http
+              containerPort: 3000
+          env:
+            - name: PORT
+              value: "3000"
+            - name: ENVIRONMENT_ID
+              value: {{ .Values.environment.id | quote }}
+            - name: ENVIRONMENT_NAME
+              value: {{ .Values.environment.name | quote }}
+            - name: REGION_NAME
+              value: {{ .Values.environment.region | quote }}
+            - name: GOLDEN_PATH
+              value: aks
+            - name: APP_VERSION
+              value: {{ .Values.environment.version | quote }}
+          readinessProbe:
+            httpGet: { path: /readyz, port: http }
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          livenessProbe:
+            httpGet: { path: /healthz, port: http }
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}

@@ -1,0 +1,22 @@
+name: Set up lifecycle controller
+description: Configure the pinned Terraform and Node.js toolchain for the lifecycle controller
+runs:
+  using: composite
+  steps:
+    - name: Set up Terraform 1.15.8
+      uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3
+      with:
+        terraform_version: "1.15.8"
+        terraform_wrapper: false
+    - name: Set up Node.js
+      uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+      with:
+        node-version: "24"
+        cache: npm
+        cache-dependency-path: controller/package-lock.json
+    - name: Verify controller lockfile
+      shell: pwsh
+      run: npm ci --prefix controller --ignore-scripts
+    - name: Type-check controller
+      shell: pwsh
+      run: npm run typecheck --prefix controller

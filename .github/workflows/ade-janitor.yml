@@ -1,0 +1,63 @@
+name: ADE expiry janitor
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Report expiry changes without applying them
+        required: true
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+  id-token: write
+  issues: write
+
+env:
+  PLATFORM_LOGS_INGESTION_ENDPOINT: ${{ vars.PLATFORM_LOGS_INGESTION_ENDPOINT }}
+  PLATFORM_DCR_IMMUTABLE_ID: ${{ vars.PLATFORM_DCR_IMMUTABLE_ID }}
+  PLATFORM_DCR_STREAM: ${{ vars.PLATFORM_DCR_STREAM }}
+
+concurrency:
+  group: ade-expiry-janitor
+  cancel-in-progress: false
+
+jobs:
+  clamp-expiry:
+    if: vars.ENABLE_ADE == 'true'
+    runs-on: ubuntu-latest
+    environment: lifecycle
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5 # v2
+        with:
+          client-id: ${{ vars.AZURE_LIFECYCLE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: Apply native ADE expiry default and maximum
+        shell: pwsh
+        env:
+          ENABLE_ADE: "true"
+          ADE_DEVCENTER_NAME: ${{ vars.ADE_DEVCENTER_NAME }}
+          ADE_PROJECT_NAME: ${{ vars.ADE_PROJECT_NAME }}
+          AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run || false }}
+        run: ./scripts/Invoke-AdeJanitor.ps1 -DryRun:([System.Convert]::ToBoolean($env:DRY_RUN))
+      - name: Emit sanitized ADE janitor success
+        if: success()
+        shell: pwsh
+        run: ./scripts/Write-PlatformLifecycleLog.ps1 -Operation ade-expiry-janitor -Outcome success -Message 'ADE expiry defaults and maximum-age clamps were reconciled.'
+      - name: Emit sanitized ADE janitor failure
+        if: failure()
+        shell: pwsh
+        run: ./scripts/Write-PlatformLifecycleLog.ps1 -Operation ade-expiry-janitor -Outcome failure -Message 'Scheduled ADE expiry reconciliation failed; native expiry may require operator review.' -BestEffort
+      - name: Open one deduplicated ADE expiry alert
+        if: failure()
+        uses: ./.github/actions/open-platform-alert
+        with:
+          token: ${{ github.token }}
+          title: "[platform-alert] ADE expiry janitor failed"
+          body: "The optional ADE expiry janitor failed; review native scheduled deletion and retry the bounded 72-hour clamp."

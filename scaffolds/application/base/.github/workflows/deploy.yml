@@ -1,0 +1,212 @@
+name: Deploy selected golden path
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      platform_dispatch_id:
+        description: Correlation ID supplied by the platform controller
+        required: false
+        type: string
+
+run-name: Deploy ${{ vars.ENVIRONMENT_ID }} / ${{ inputs.platform_dispatch_id || 'push' }}
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: deployment-${{ github.repository }}
+  cancel-in-progress: false
+
+jobs:
+  web-app:
+    if: vars.PLATFORM_READY == 'true' && vars.GOLDEN_PATH == 'web-app'
+    runs-on: ubuntu-latest
+    environment: deployment
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with: { node-version: "24", cache: npm }
+      - run: npm ci --ignore-scripts
+      - run: npm test
+      - name: Authenticate to Azure over OIDC
+        uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5 # v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: Wait for Azure role readiness
+        shell: bash
+        env:
+          GOLDEN_PATH: ${{ vars.GOLDEN_PATH }}
+          RESOURCE_GROUP: ${{ vars.RESOURCE_GROUP }}
+          ENVIRONMENT_ID: ${{ vars.ENVIRONMENT_ID }}
+          AZURE_RESOURCE_NAME: ${{ vars.AZURE_RESOURCE_NAME }}
+        run: bash .platform/wait-azure-readiness.sh
+      - name: Resolve the inventory-tagged Web App
+        id: app
+        shell: bash
+        env:
+          RESOURCE_GROUP: ${{ vars.RESOURCE_GROUP }}
+          ENVIRONMENT_ID: ${{ vars.ENVIRONMENT_ID }}
+          AZURE_RESOURCE_NAME: ${{ vars.AZURE_RESOURCE_NAME }}
+        run: |
+          set -euo pipefail
+          actual=$(az webapp show --resource-group "$RESOURCE_GROUP" --name "$AZURE_RESOURCE_NAME" --query 'tags."platform.environment_id"' --output tsv)
+          [[ "$actual" == "$ENVIRONMENT_ID" ]]
+          echo "name=$AZURE_RESOURCE_NAME" >> "$GITHUB_OUTPUT"
+      - run: zip -q -r app.zip package.json package-lock.json src
+      - name: Deploy ZIP over OIDC session
+        run: az webapp deploy --resource-group "${{ vars.RESOURCE_GROUP }}" --name "${{ steps.app.outputs.name }}" --type zip --src-path app.zip --clean true --restart true
+      - name: Verify trusted HTTPS endpoint
+        run: curl --fail --show-error --silent --retry 12 --retry-delay 10 --retry-all-errors "${{ vars.ENDPOINT }}/healthz"
+
+  container-app:
+    if: vars.PLATFORM_READY == 'true' && vars.GOLDEN_PATH == 'container-app'
+    runs-on: ubuntu-latest
+    environment: deployment
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with: { node-version: "24", cache: npm }
+      - run: npm ci --ignore-scripts
+      - run: npm test
+      - name: Authenticate to Azure over OIDC
+        uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5 # v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: Install hash-verified Container Apps CLI extension
+        shell: bash
+        run: bash .platform/install-containerapp-extension.sh
+      - name: Wait for Azure role readiness
+        shell: bash
+        env:
+          GOLDEN_PATH: ${{ vars.GOLDEN_PATH }}
+          RESOURCE_GROUP: ${{ vars.RESOURCE_GROUP }}
+          ENVIRONMENT_ID: ${{ vars.ENVIRONMENT_ID }}
+          AZURE_RESOURCE_NAME: ${{ vars.AZURE_RESOURCE_NAME }}
+          ACR_NAME: ${{ vars.ACR_NAME }}
+          IMAGE_REPOSITORY: ${{ vars.IMAGE_REPOSITORY }}
+          AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+        run: bash .platform/wait-azure-readiness.sh
+      - name: Build and push ABAC-scoped image
+        id: image
+        shell: bash
+        env:
+          ACR_NAME: ${{ vars.ACR_NAME }}
+          IMAGE_REPOSITORY: ${{ vars.IMAGE_REPOSITORY }}
+          AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+        run: |
+          set -euo pipefail
+          server="${ACR_NAME}.azurecr.io"
+          aad_token=$(az account get-access-token --resource https://containerregistry.azure.net --query accessToken --output tsv)
+          refresh_token=$(curl --fail --silent --show-error --request POST "https://${server}/oauth2/exchange" \
+            --data-urlencode grant_type=access_token --data-urlencode "service=${server}" \
+            --data-urlencode "tenant=${AZURE_TENANT_ID}" --data-urlencode "access_token=${aad_token}" | jq -er .refresh_token)
+          printf '%s' "$refresh_token" | docker login "$server" --username 00000000-0000-0000-0000-000000000000 --password-stdin
+          unset aad_token refresh_token
+          image="${ACR_NAME}.azurecr.io/${IMAGE_REPOSITORY}:${GITHUB_SHA}"
+          docker build --pull --tag "$image" .
+          docker push "$image"
+          digest_ref=$(docker image inspect "$image" --format '{{ index .RepoDigests 0 }}')
+          [[ "$digest_ref" == "${server}/${IMAGE_REPOSITORY}@sha256:"* ]]
+          echo "uri=$digest_ref" >> "$GITHUB_OUTPUT"
+      - name: Resolve and update the inventory-tagged Container App
+        shell: bash
+        env:
+          RESOURCE_GROUP: ${{ vars.RESOURCE_GROUP }}
+          ENVIRONMENT_ID: ${{ vars.ENVIRONMENT_ID }}
+          AZURE_RESOURCE_NAME: ${{ vars.AZURE_RESOURCE_NAME }}
+        run: |
+          set -euo pipefail
+          actual=$(az containerapp show --resource-group "$RESOURCE_GROUP" --name "$AZURE_RESOURCE_NAME" --query 'tags."platform.environment_id"' --output tsv)
+          [[ "$actual" == "$ENVIRONMENT_ID" ]]
+          az containerapp update --resource-group "$RESOURCE_GROUP" --name "$AZURE_RESOURCE_NAME" \
+            --image "${{ steps.image.outputs.uri }}" \
+            --set-env-vars "ENVIRONMENT_ID=$ENVIRONMENT_ID" "ENVIRONMENT_NAME=${{ vars.ENVIRONMENT_NAME }}" "REGION_NAME=${{ vars.REGION_NAME }}" "GOLDEN_PATH=container-app" "APP_VERSION=$GITHUB_SHA"
+      - name: Verify trusted HTTPS endpoint
+        run: curl --fail --show-error --silent --retry 18 --retry-delay 10 --retry-all-errors "${{ vars.ENDPOINT }}/healthz"
+
+  aks:
+    if: vars.PLATFORM_READY == 'true' && vars.GOLDEN_PATH == 'aks'
+    runs-on: ubuntu-latest
+    environment: deployment
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with: { node-version: "24", cache: npm }
+      - run: npm ci --ignore-scripts
+      - run: npm test
+      - name: Authenticate to Azure over OIDC
+        uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5 # v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - uses: azure/setup-kubectl@776406bce94f63e41d621b960d78ee25c8b76ede # v4
+      - uses: azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4 # v4
+      - uses: azure/use-kubelogin@0ce7c36141aa27d4934872cf00b0120804c98a29 # v1.3
+        with:
+          kubelogin-version: v0.2.17
+      - name: Wait for Azure role readiness
+        shell: bash
+        env:
+          GOLDEN_PATH: ${{ vars.GOLDEN_PATH }}
+          RESOURCE_GROUP: ${{ vars.RESOURCE_GROUP }}
+          ENVIRONMENT_ID: ${{ vars.ENVIRONMENT_ID }}
+          AZURE_RESOURCE_NAME: ${{ vars.AZURE_RESOURCE_NAME }}
+          ACR_NAME: ${{ vars.ACR_NAME }}
+          IMAGE_REPOSITORY: ${{ vars.IMAGE_REPOSITORY }}
+          AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+        run: bash .platform/wait-azure-readiness.sh
+      - name: Build and push ABAC-scoped image
+        id: image
+        shell: bash
+        env:
+          ACR_NAME: ${{ vars.ACR_NAME }}
+          IMAGE_REPOSITORY: ${{ vars.IMAGE_REPOSITORY }}
+          AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+        run: |
+          set -euo pipefail
+          server="${ACR_NAME}.azurecr.io"
+          aad_token=$(az account get-access-token --resource https://containerregistry.azure.net --query accessToken --output tsv)
+          refresh_token=$(curl --fail --silent --show-error --request POST "https://${server}/oauth2/exchange" \
+            --data-urlencode grant_type=access_token --data-urlencode "service=${server}" \
+            --data-urlencode "tenant=${AZURE_TENANT_ID}" --data-urlencode "access_token=${aad_token}" | jq -er .refresh_token)
+          printf '%s' "$refresh_token" | docker login "$server" --username 00000000-0000-0000-0000-000000000000 --password-stdin
+          unset aad_token refresh_token
+          image="${ACR_NAME}.azurecr.io/${IMAGE_REPOSITORY}:${GITHUB_SHA}"
+          docker build --pull --tag "$image" .
+          docker push "$image"
+          digest_ref=$(docker image inspect "$image" --format '{{ index .RepoDigests 0 }}')
+          [[ "$digest_ref" == "${server}/${IMAGE_REPOSITORY}@sha256:"* ]]
+          echo "uri=$digest_ref" >> "$GITHUB_OUTPUT"
+      - name: Deploy Helm release with Azure RBAC credentials
+        shell: bash
+        env:
+          RESOURCE_GROUP: ${{ vars.RESOURCE_GROUP }}
+          ENVIRONMENT_ID: ${{ vars.ENVIRONMENT_ID }}
+          ENDPOINT: ${{ vars.ENDPOINT }}
+          AZURE_RESOURCE_NAME: ${{ vars.AZURE_RESOURCE_NAME }}
+        run: |
+          set -euo pipefail
+          actual=$(az aks show --resource-group "$RESOURCE_GROUP" --name "$AZURE_RESOURCE_NAME" --query 'tags."platform.environment_id"' --output tsv)
+          [[ "$actual" == "$ENVIRONMENT_ID" ]]
+          az aks get-credentials --resource-group "$RESOURCE_GROUP" --name "$AZURE_RESOURCE_NAME" --overwrite-existing --format exec
+          kubelogin convert-kubeconfig -l azurecli
+          hostname="${ENDPOINT#https://}"
+          helm upgrade --install golden-path ./helm \
+            --namespace golden-path --atomic --timeout 10m \
+            --set-string image.repository="${{ steps.image.outputs.uri }}" \
+            --set-string image.tag="" \
+            --set-string ingress.host="$hostname" \
+            --set-string environment.id="$ENVIRONMENT_ID" \
+            --set-string environment.name="${{ vars.ENVIRONMENT_NAME }}" \
+            --set-string environment.region="${{ vars.REGION_NAME }}" \
+            --set-string environment.version="$GITHUB_SHA"
+      - name: Verify trusted HTTPS endpoint
+        run: curl --fail --show-error --silent --retry 30 --retry-delay 10 --retry-all-errors "${{ vars.ENDPOINT }}/healthz"
