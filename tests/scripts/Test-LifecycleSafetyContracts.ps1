@@ -76,7 +76,7 @@ if ($sync.Contains('az graph query')) { throw 'ACTIVE reconciliation must use th
 $absence = Get-Content -LiteralPath (Join-Path $root 'scripts\Test-AzureAbsence.ps1') -Raw
 if ($absence.Contains('az graph query')) { throw 'Azure absence proof must use the Azure Resource Graph ARM API without an extension dependency.' }
 $resourceGraph = Get-Content -LiteralPath $resourceGraphPath -Raw
-foreach ($contract in @('Microsoft.ResourceGraph/resources?api-version=2024-04-01', 'AZURE_SUBSCRIPTION_ID', "resultFormat = 'objectArray'")) {
+foreach ($contract in @('Microsoft.ResourceGraph/resources?api-version=2024-04-01', 'AZURE_SUBSCRIPTION_ID', "resultFormat = 'objectArray'", '[IO.File]::WriteAllText', '--body "@$bodyFile"', 'Remove-Item -LiteralPath $bodyFile -Force')) {
   if (-not $resourceGraph.Contains($contract)) { throw "Resource Graph REST contract is missing: $contract" }
 }
 

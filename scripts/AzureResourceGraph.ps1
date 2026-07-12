@@ -14,13 +14,27 @@ function Invoke-PlatformResourceGraphQuery {
     query = $Query
     options = @{ '$top' = $First; resultFormat = 'objectArray' }
   } | ConvertTo-Json -Depth 6 -Compress
-  $raw = & az rest `
-    --method post `
-    --uri 'https://management.azure.com/providers/Microsoft.ResourceGraph/resources?api-version=2024-04-01' `
-    --headers 'Content-Type=application/json' `
-    --body $body `
-    --output json 2>&1
-  if ($LASTEXITCODE -ne 0) { throw "Azure Resource Graph ARM query failed: $($raw | Out-String)" }
+
+  # PowerShell on Windows removes the JSON quotes when an inline object is
+  # passed through the native-command boundary. Azure CLI supports @file
+  # request bodies, which also keeps KQL quoting deterministic across shells.
+  $bodyFile = Join-Path ([IO.Path]::GetTempPath()) "pelab-resource-graph-$([guid]::NewGuid().ToString('N')).json"
+  $raw = $null
+  $exitCode = $null
+  try {
+    [IO.File]::WriteAllText($bodyFile, $body, [Text.UTF8Encoding]::new($false))
+    $raw = & az rest `
+      --method post `
+      --uri 'https://management.azure.com/providers/Microsoft.ResourceGraph/resources?api-version=2024-04-01' `
+      --headers 'Content-Type=application/json' `
+      --body "@$bodyFile" `
+      --output json 2>&1
+    $exitCode = $LASTEXITCODE
+  }
+  finally {
+    if (Test-Path -LiteralPath $bodyFile) { Remove-Item -LiteralPath $bodyFile -Force }
+  }
+  if ($exitCode -ne 0) { throw "Azure Resource Graph ARM query failed: $($raw | Out-String)" }
   try { return (($raw | Out-String) | ConvertFrom-Json) }
   catch { throw "Azure Resource Graph returned malformed JSON: $($_.Exception.Message)" }
 }
