@@ -48,6 +48,24 @@ A workflow accepts a golden path, two safe slugs, an allowed region and a bounde
 
 Every 15 minutes, reconciliation compares desired state, expiry, GitHub and Azure reality. Cleanup quiesces the repository, revokes its identity, destroys Azure, removes non-Terraform residuals, and verifies state/resource/RG/tag absence twice. Only an `AZURE_ABSENT` checkpoint and immutable GitHub identity match allow repository deletion.
 
+## Current and target architecture
+
+### Current state — repository-defined lab
+
+<p align="center">
+  <img src="../docs/images/platform-architecture-current-state.svg" alt="Current-state lab architecture with GitHub self-service, exact-subject OIDC, shared platform resources, three golden paths and verified teardown" width="1200" />
+</p>
+
+The current-state diagram maps directly to this repository. It shows the GitHub request and repository lifecycle, Microsoft Entra ID federation, the bootstrap and shared-platform resource groups, governance controls, the three disposable workload paths and the final verified teardown gate.
+
+### Target state — conceptual production design
+
+<p align="center">
+  <img src="../docs/images/platform-architecture-target-state.svg" alt="Target-state production architecture with management groups, dedicated platform subscriptions, private regional connectivity and vended workload subscriptions" width="1200" />
+</p>
+
+The target-state diagram is the production evolution of the lab rather than a deployed feature set. It separates identity, management and connectivity subscriptions, introduces private regional hub stamps and places production and nonproduction workloads in vended landing-zone subscriptions with inherited controls. See the [architecture learning guide](architecture/overview.md) for the boundary-by-boundary explanation.
+
 ## Three golden paths
 
 | Web App | Container App | AKS workload |
