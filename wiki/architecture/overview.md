@@ -1,8 +1,18 @@
 # Architecture learning guide
 
-The platform separates experience, control and workload planes so each has a clear owner, credential and lifecycle.
+The platform separates experience, control and workload planes so each has a clear owner, credential and lifecycle. The two diagrams below should be read together: the first documents what this repository defines today, while the second shows how the same product model could evolve into a production landing-zone design.
 
-![Platform architecture showing experience, control, workload, and deletion-safety boundaries](../../docs/images/platform-architecture.svg)
+## Current state — runnable lab architecture
+
+![Current-state Azure Platform Engineering Lab architecture](../../docs/images/platform-architecture-current-state.svg)
+
+The current state is intentionally optimized for learning and repeatable teardown. GitHub provides the self-service entry point, Microsoft Entra ID exchanges exact-subject OIDC tokens without an Azure client secret, and one dedicated disposable subscription contains bootstrap, shared-platform, governance and workload resources. Each request selects exactly one golden path—Web App, Container Apps or AKS—and the controller must prove Azure absence twice before it may delete the generated repository.
+
+## Target state — conceptual production architecture
+
+![Target-state Azure Platform Engineering architecture](../../docs/images/platform-architecture-target-state.svg)
+
+The target state keeps the same repository-driven vending and exact-subject identity model, but introduces enterprise separation and private networking. Platform capabilities are placed in dedicated identity, management and connectivity subscriptions beneath a platform management group. Production and nonproduction workloads receive vended subscriptions and private spokes, while regional hub stamps provide private DNS, WAF ingress, firewall egress, DDoS protection and recovery placement. This diagram is a proposed design, not a claim that the repository deploys these production controls.
 
 ## Trace the boundaries
 

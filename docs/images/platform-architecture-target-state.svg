@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="750" viewBox="0 0 1200 750" role="img" aria-labelledby="title desc">
+  <title id="title">Azure Platform Engineering — target state</title>
+  <desc id="desc">Conceptual production architecture with management groups, separate identity, management and connectivity subscriptions, private regional stamps, vended workload subscriptions, inherited controls, and private-by-default networking.</desc>
+  <defs>
+    <style>
+      .title{font:700 27px 'Segoe UI',Arial,sans-serif;fill:#123b5d}.sub{font:14px 'Segoe UI',Arial,sans-serif;fill:#526b7e}.h{font:700 15px 'Segoe UI',Arial,sans-serif;fill:#123b5d}.b{font:700 13px 'Segoe UI',Arial,sans-serif;fill:#123b5d}.t{font:11px 'Segoe UI',Arial,sans-serif;fill:#526b7e}.panel{fill:#eef8ff;stroke:#1689d8;stroke-width:1.4}.box{fill:#fff;stroke:#62b3ea;stroke-width:1}.dash{fill:#fff;stroke:#62b3ea;stroke-width:1;stroke-dasharray:6 5}.line{stroke:#087fc8;stroke-width:2;fill:none}.green{fill:#f3fbef;stroke:#67aa39;stroke-width:1.4}.blue{fill:#dff2ff;stroke:#1689d8;stroke-width:1.2}
+    </style>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#087fc8"/></marker>
+  </defs>
+  <rect width="1200" height="750" fill="#fff"/>
+  <text x="30" y="38" class="title">AZURE PLATFORM ENGINEERING — TARGET STATE</text>
+  <text x="30" y="61" class="sub">Production landing zone • private regional stamps • governed self-service</text>
+  <rect x="870" y="20" width="300" height="45" rx="7" class="blue"/><text x="1020" y="40" text-anchor="middle" class="b">CONCEPTUAL PRODUCTION DESIGN</text><text x="1020" y="56" text-anchor="middle" class="t">Proposed architecture — not deployed</text>
+
+  <rect x="30" y="82" width="1140" height="145" rx="8" class="panel"/><text x="47" y="106" class="h">A  TENANT ORGANIZATION AND SUBSCRIPTION PLACEMENT</text>
+  <rect x="50" y="125" width="165" height="78" rx="6" class="box"/><text x="132" y="150" text-anchor="middle" class="b">Microsoft Entra ID</text><text x="132" y="168" text-anchor="middle" class="t">PIM + access reviews</text><text x="132" y="184" text-anchor="middle" class="t">OIDC federation + monitoring</text>
+  <rect x="484" y="110" width="210" height="45" rx="6" class="blue"/><text x="589" y="137" text-anchor="middle" class="b">Tenant root group</text>
+  <rect x="240" y="175" width="190" height="38" rx="5" class="box"/><text x="335" y="198" text-anchor="middle" class="b">Platform</text>
+  <rect x="455" y="175" width="190" height="38" rx="5" class="box"/><text x="550" y="198" text-anchor="middle" class="b">Landing Zones</text>
+  <rect x="670" y="175" width="190" height="38" rx="5" class="box"/><text x="765" y="198" text-anchor="middle" class="b">Sandbox</text>
+  <rect x="885" y="175" width="245" height="38" rx="5" class="box"/><text x="1007" y="198" text-anchor="middle" class="b">Decommissioned</text>
+  <path d="M589 155V165H335V175M589 165H550V175M589 165H765V175M589 165H1007V175" class="line"/>
+
+  <rect x="30" y="245" width="205" height="390" rx="8" fill="#f7fbfe" stroke="#7898ad" stroke-width="1.2"/><text x="47" y="270" class="h">B  GITHUB SELF-SERVICE</text>
+  <rect x="50" y="300" width="165" height="55" rx="6" class="box"/><text x="132" y="325" text-anchor="middle" class="b">Platform repository</text><text x="132" y="343" text-anchor="middle" class="t">Reviewed workflows + policy</text>
+  <rect x="50" y="375" width="165" height="55" rx="6" class="box"/><text x="132" y="400" text-anchor="middle" class="b">Request and vending</text><text x="132" y="418" text-anchor="middle" class="t">Typed contract + placement</text>
+  <rect x="50" y="450" width="165" height="55" rx="6" class="box"/><text x="132" y="475" text-anchor="middle" class="b">GitHub App</text><text x="132" y="493" text-anchor="middle" class="t">Repository lifecycle</text>
+  <rect x="50" y="525" width="165" height="55" rx="6" class="box"/><text x="132" y="550" text-anchor="middle" class="b">Generated app repo</text><text x="132" y="568" text-anchor="middle" class="t">Private golden-path delivery</text>
+  <rect x="50" y="595" width="165" height="28" rx="5" class="box"/><text x="132" y="614" text-anchor="middle" class="b">Exact-subject OIDC</text>
+  <path d="M132 355V375M132 430V450M132 505V525M132 580V595" class="line" marker-end="url(#a)"/>
+
+  <rect x="252" y="245" width="918" height="238" rx="8" class="panel"/><text x="269" y="270" class="h">C  PLATFORM MANAGEMENT GROUP — SEPARATE SUBSCRIPTIONS</text>
+  <rect x="272" y="292" width="190" height="165" rx="7" class="box"/><text x="288" y="318" class="h">IDENTITY SUBSCRIPTION</text><rect x="290" y="337" width="154" height="45" rx="5" class="box"/><text x="303" y="357" class="b">Privileged access</text><text x="303" y="373" class="t">PIM + access reviews</text><rect x="290" y="395" width="154" height="43" rx="5" class="box"/><text x="303" y="416" class="b">Platform Key Vault</text><text x="303" y="432" class="t">Private endpoint</text>
+  <rect x="480" y="292" width="300" height="165" rx="7" class="box"/><text x="496" y="318" class="h">MANAGEMENT SUBSCRIPTION</text><rect x="498" y="337" width="125" height="45" rx="5" class="box"/><text x="511" y="357" class="b">Private state</text><text x="511" y="373" class="t">Inventory + evidence</text><rect x="637" y="337" width="125" height="45" rx="5" class="box"/><text x="650" y="357" class="b">Premium ACR</text><text x="650" y="373" class="t">Private endpoint</text><rect x="498" y="395" width="264" height="43" rx="5" class="box"/><text x="511" y="416" class="b">Platform automation + operations</text><text x="511" y="432" class="t">Lifecycle controller • Monitor • Defender • cost</text>
+  <rect x="798" y="292" width="352" height="165" rx="7" class="box"/><text x="814" y="318" class="h">CONNECTIVITY SUBSCRIPTION</text><rect x="816" y="337" width="150" height="100" rx="5" class="blue"/><text x="891" y="359" text-anchor="middle" class="b">WEST EUROPE — PRIMARY</text><text x="891" y="382" text-anchor="middle" class="t">Hub VNet • App Gateway WAF</text><text x="891" y="399" text-anchor="middle" class="t">Azure Firewall • DDoS</text><text x="891" y="416" text-anchor="middle" class="t">Private DNS • Network Watcher</text><rect x="982" y="337" width="150" height="100" rx="5" class="dash"/><text x="1057" y="359" text-anchor="middle" class="b">NORTH EUROPE — RECOVERY</text><text x="1057" y="382" text-anchor="middle" class="t">Equivalent recovery stamp</text><text x="1057" y="399" text-anchor="middle" class="t">Firewall • DDoS • DNS</text><text x="1057" y="416" text-anchor="middle" class="t">Network Watcher</text>
+  <path d="M235 402H272M462 375H480M780 375H798" class="line" marker-end="url(#a)"/>
+
+  <rect x="252" y="500" width="918" height="135" rx="8" class="panel"/><text x="269" y="525" class="h">D  LANDING ZONES — VENDED WORKLOAD SUBSCRIPTIONS AND PRIVATE SPOKES</text>
+  <rect x="272" y="545" width="415" height="70" rx="6" class="box"/><text x="288" y="569" class="h">PRODUCTION SUBSCRIPTION</text><text x="288" y="590" class="t">Private Web App • Container Apps • Private AKS</text><text x="288" y="606" class="t">WEU primary with NEU recovery • private endpoints and ingress</text>
+  <rect x="705" y="545" width="445" height="70" rx="6" class="box"/><text x="721" y="569" class="h">NONPRODUCTION SUBSCRIPTION</text><text x="721" y="590" class="t">Same golden paths with approvals, quotas and environment boundaries</text><text x="721" y="606" class="t">Spoke-isolated workloads • workload identity • private telemetry</text>
+  <path d="M891 457V488H480V545M1057 437V488H927V545" class="line" marker-end="url(#a)"/>
+
+  <rect x="252" y="653" width="918" height="65" rx="8" class="green"/><text x="270" y="680" class="h">E  INHERITED PLATFORM CONTROLS</text><text x="270" y="700" class="t">Policy • Defender • budgets • diagnostics • inventory • lifecycle evidence • decommissioning</text><text x="1115" y="680" text-anchor="end" class="b">Private by default</text><text x="1115" y="700" text-anchor="end" class="t">Private endpoints + DNS • WAF ingress • Firewall egress</text>
+</svg>
