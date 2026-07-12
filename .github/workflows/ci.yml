@@ -177,7 +177,7 @@ jobs:
         with:
           dockerfile: runner/ade-terraform/Dockerfile
           failure-threshold: error
-      - uses: azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4 # v4
+      - uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310 # v5.0.1
       - name: Helm lint and Kubernetes schema validation
         run: |
           helm lint scaffolds/application/overlays/aks/helm \
