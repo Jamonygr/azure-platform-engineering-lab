@@ -1,6 +1,6 @@
 ARG ADE_CORE_IMAGE=mcr.microsoft.com/deployment-environments/runners/core@sha256:0146f2afc24910cffa7d95eb17c21fc5ff6a64516e2cdbfe32e5d77bf4b2dd23
 
-FROM alpine:3.23@sha256:fd791d74b68913cbb027c6546007b3f0d3bc45125f797758156952bc2d6daf40 AS terraform-download
+FROM alpine:3.24@sha256:28bd5fe8b56d1bd048e5babf5b10710ebe0bae67db86916198a6eec434943f8b AS terraform-download
 ARG TERRAFORM_VERSION=1.15.8
 ARG TERRAFORM_SHA256=d25ce7b6902013ad905db3d2eab0be4cd905887fe88b81a6171b8d5503c31f3d
 ARG AKS_PREVIEW_EXTENSION_URL=https://azcliprod.blob.core.windows.net/cli-extensions/aks_preview-21.0.0b8-py2.py3-none-any.whl
