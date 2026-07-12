@@ -71,19 +71,23 @@ If you are reviewing this repository, use this order:
 
 ## Architecture
 
+### Current state — repository-defined lab
+
 <p align="center">
-  <img src="docs/images/platform-architecture.svg" alt="Architecture showing a developer request flowing through GitHub, the platform control plane, three Azure golden paths, monitoring, inventory, and cleanup" width="1200" />
+  <img src="docs/images/platform-architecture-current-state.svg" alt="Current-state Azure Platform Engineering Lab architecture with GitHub self-service, exact-subject OIDC, shared platform resources, three disposable golden paths and verified teardown" width="1200" />
 </p>
 
-The platform has three boundaries:
+The current state maps directly to this repository. GitHub provides the request and generated-repository lifecycle, Microsoft Entra ID provides exact-subject OIDC without an Azure client secret, and one dedicated disposable subscription contains the bootstrap, shared platform, governance and workload resources. A request selects exactly one Web App, Container Apps or AKS golden path. Shared ACR, Log Analytics, inventory, action groups and state remain platform-owned, while the final gate requires two independent Azure-absence checks before repository deletion.
 
-- **Experience plane** — GitHub request, extend, destroy, and generated application workflows.
-- **Control plane** — bootstrap state, shared Azure services, GitHub App, lifecycle controller, inventory, locks, policy, and evidence.
-- **Workload plane** — one disposable Web App, Container App, or dedicated AKS environment with a narrowly scoped deployment identity.
+### Target state — conceptual production design
 
-Shared resources such as Azure Container Registry (ACR), Log Analytics, inventory tables, action groups, and state storage belong to the platform. A disposable environment references them but never owns or destroys them.
+<p align="center">
+  <img src="docs/images/platform-architecture-target-state.svg" alt="Target-state Azure platform architecture with management groups, separate platform subscriptions, private regional connectivity and vended workload subscriptions" width="1200" />
+</p>
 
-See [Architecture](docs/architecture.md) for identity and data flows, [Setup](docs/setup.md) for bootstrap order, and [Monitoring](docs/monitoring.md) for operational signals.
+The target state shows how the same repository-driven product model could evolve for production. Identity, management and connectivity move into separate platform subscriptions beneath a platform management group; production and nonproduction workloads receive vended landing-zone subscriptions and private spokes; and regional hub stamps provide private DNS, WAF ingress, firewall egress, DDoS protection and recovery placement. This is a proposed architecture, not functionality currently deployed by the lab.
+
+See [Architecture](docs/architecture.md) for identity and data flows, [the wiki architecture guide](wiki/architecture/overview.md) for a current-versus-target walkthrough, [Setup](docs/setup.md) for bootstrap order, and [Monitoring](docs/monitoring.md) for operational signals.
 
 ## Golden paths
 
