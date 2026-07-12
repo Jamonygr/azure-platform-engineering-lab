@@ -50,6 +50,31 @@ foreach ($goldenPath in $goldenPaths) {
   }
 }
 
+$containerAppTerraform = (Get-ChildItem -LiteralPath (Join-Path $root 'golden-paths\container-app-v1') -Filter '*.tf' | Get-Content -Raw) -join "`n"
+foreach ($contract in @(
+    'target_port                = 80',
+    'Container Apps supplies native TCP probes against the ingress target',
+    'resource "azurerm_monitor_diagnostic_setting" "managed_environment"',
+    'from = module.managed_environment.azurerm_monitor_diagnostic_setting.this["platform"]',
+    'enabled_metric'
+  )) {
+  if (-not $containerAppTerraform.Contains($contract)) {
+    throw "Container App bootstrap and generated application port contract is missing: $contract"
+  }
+}
+if ($containerAppTerraform.Contains('log_analytics_destination_type')) {
+  throw 'Container Apps managed-environment diagnostics must keep the provider-default destination type to prevent drift.'
+}
+if ($containerAppTerraform.Contains('liveness_probes') -or $containerAppTerraform.Contains('readiness_probes')) {
+  throw 'Container App v1 must use native target-port probes so bootstrap and generated revisions can change ports safely.'
+}
+$generatedWorkflow = Get-Content -LiteralPath (Join-Path $root 'scaffolds\application\base\.github\workflows\deploy.yml') -Raw
+foreach ($contract in @('az containerapp ingress update', '--target-port 3000 --transport auto --allow-insecure false')) {
+  if (-not $generatedWorkflow.Contains($contract)) {
+    throw "Generated Container App deployment is missing the port-transition contract: $contract"
+  }
+}
+
 $aksTerraform = (Get-ChildItem -LiteralPath (Join-Path $root 'golden-paths\aks-workload-v1') -Filter '*.tf' | Get-Content -Raw) -join "`n"
 foreach ($contract in @(
     'resource "azurerm_resource_group_policy_assignment" "node_platform"',

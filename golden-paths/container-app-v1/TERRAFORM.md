@@ -28,6 +28,7 @@
 | [azurerm_consumption_budget_resource_group.environment](https://registry.terraform.io/providers/hashicorp/azurerm/4.80.0/docs/resources/consumption_budget_resource_group) | resource |
 | [azurerm_federated_identity_credential.deployment](https://registry.terraform.io/providers/hashicorp/azurerm/4.80.0/docs/resources/federated_identity_credential) | resource |
 | [azurerm_monitor_activity_log_alert.administrative_failure](https://registry.terraform.io/providers/hashicorp/azurerm/4.80.0/docs/resources/monitor_activity_log_alert) | resource |
+| [azurerm_monitor_diagnostic_setting.managed_environment](https://registry.terraform.io/providers/hashicorp/azurerm/4.80.0/docs/resources/monitor_diagnostic_setting) | resource |
 | [azurerm_resource_group.environment](https://registry.terraform.io/providers/hashicorp/azurerm/4.80.0/docs/resources/resource_group) | resource |
 | [azurerm_resource_group_policy_assignment.platform](https://registry.terraform.io/providers/hashicorp/azurerm/4.80.0/docs/resources/resource_group_policy_assignment) | resource |
 | [azurerm_role_assignment.deployment_acr_writer](https://registry.terraform.io/providers/hashicorp/azurerm/4.80.0/docs/resources/role_assignment) | resource |

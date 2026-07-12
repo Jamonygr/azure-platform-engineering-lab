@@ -118,14 +118,28 @@ module "managed_environment" {
   log_analytics_workspace = {
     resource_id = var.log_analytics_workspace_id
   }
+}
 
-  diagnostic_settings = {
-    platform = {
-      name                  = "diag-cae-${var.environment_name}-${local.short_id}"
-      workspace_resource_id = var.log_analytics_workspace_id
-      log_groups            = ["allLogs"]
-      metric_categories     = ["AllMetrics"]
-    }
+# The managed-environment API normalizes logAnalyticsDestinationType away.
+# AVM 0.5.0 defaults that field to Dedicated, which creates perpetual drift.
+# Keep the AVM for the environment and manage only this provider-normalized
+# diagnostic setting at the root until the pinned module exposes a null value.
+moved {
+  from = module.managed_environment.azurerm_monitor_diagnostic_setting.this["platform"]
+  to   = azurerm_monitor_diagnostic_setting.managed_environment
+}
+
+resource "azurerm_monitor_diagnostic_setting" "managed_environment" {
+  name                       = "diag-cae-${var.environment_name}-${local.short_id}"
+  target_resource_id         = module.managed_environment.resource_id
+  log_analytics_workspace_id = var.log_analytics_workspace_id
+
+  enabled_log {
+    category_group = "allLogs"
+  }
+
+  enabled_metric {
+    category = "AllMetrics"
   }
 }
 
@@ -166,32 +180,17 @@ module "container_app" {
         { name = "GOLDEN_PATH", value = "container-app" },
         { name = "REGION_NAME", value = lower(var.location) }
       ]
-      liveness_probes = [{
-        port = 3000
-        # Terraform creates a public bootstrap revision before the generated
-        # repository can authenticate. Keep that transaction independent of
-        # the bootstrap image's route layout; the controller still requires
-        # the generated application's HTTPS /healthz smoke test.
-        transport        = "TCP"
-        initial_delay    = 5
-        interval_seconds = 10
-        timeout          = 3
-      }]
-      readiness_probes = [{
-        port                    = 3000
-        transport               = "TCP"
-        initial_delay           = 3
-        interval_seconds        = 5
-        timeout                 = 3
-        success_count_threshold = 1
-      }]
+      # The immutable seed image listens on 80. With no explicit probes,
+      # Container Apps supplies native TCP probes against the ingress target.
+      # The generated workflow moves ingress to 3000 before deploying the
+      # Node image, so its platform-managed probes follow the new target port.
     }]
   }
 
   ingress = {
     external_enabled           = true
     allow_insecure_connections = false
-    target_port                = 3000
+    target_port                = 80
     transport                  = "auto"
     traffic_weight = [{
       latest_revision = true

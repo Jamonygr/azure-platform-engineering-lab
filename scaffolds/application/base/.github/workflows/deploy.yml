@@ -125,6 +125,11 @@ jobs:
           set -euo pipefail
           actual=$(az containerapp show --resource-group "$RESOURCE_GROUP" --name "$AZURE_RESOURCE_NAME" --query 'tags."platform.environment_id"' --output tsv)
           [[ "$actual" == "$ENVIRONMENT_ID" ]]
+          # Terraform's immutable bootstrap image listens on port 80. Switch
+          # the app-scoped ingress before publishing the generated Node image;
+          # native Container Apps probes follow this target-port transition.
+          az containerapp ingress update --resource-group "$RESOURCE_GROUP" --name "$AZURE_RESOURCE_NAME" \
+            --target-port 3000 --transport auto --allow-insecure false
           az containerapp update --resource-group "$RESOURCE_GROUP" --name "$AZURE_RESOURCE_NAME" \
             --image "${{ steps.image.outputs.uri }}" \
             --set-env-vars "ENVIRONMENT_ID=$ENVIRONMENT_ID" "ENVIRONMENT_NAME=${{ vars.ENVIRONMENT_NAME }}" "REGION_NAME=${{ vars.REGION_NAME }}" "GOLDEN_PATH=container-app" "APP_VERSION=$GITHUB_SHA"

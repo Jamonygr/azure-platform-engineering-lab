@@ -55,9 +55,11 @@ Best for teams that want a container contract, revision deployment, and scale-to
 - Shared ACR repository `apps/<repository-id>`.
 - Diagnostics, health/revision alerts, budget, and policies.
 
+The managed-environment diagnostic setting remains a small documented AzureRM coverage exception: Azure omits `logAnalyticsDestinationType` for this target, while AVM `0.5.0` defaults it to `Dedicated`. Managing that setting at the golden-path root keeps plans idempotent; a `moved` block preserves existing state until the pinned AVM exposes the provider-default value.
+
 ### Delivery and ABAC
 
-The generated workflow tests and builds the image, signs into Azure using OIDC, pushes a commit tag to its repository-scoped ACR path, resolves the resulting manifest digest, and deploys that immutable digest as a new revision. The build identity receives the repository writer role/condition; the runtime identity receives repository reader only. Neither identity should enumerate or pull another generated repository's images. The generated workflow and ADE runner install the exact Container Apps CLI extension wheel pinned in [Reference](reference.md), verify its SHA-256 before installation, and verify the installed version. Terraform's one-time bootstrap image is also digest-pinned; no mutable container tag participates in provisioning.
+The generated workflow tests and builds the image, signs into Azure using OIDC, pushes a commit tag to its repository-scoped ACR path, resolves the resulting manifest digest, and deploys that immutable digest as a new revision. The build identity receives the repository writer role/condition; the runtime identity receives repository reader only. Neither identity should enumerate or pull another generated repository's images. The generated workflow and ADE runner install the exact Container Apps CLI extension wheel pinned in [Reference](reference.md), verify its SHA-256 before installation, and verify the installed version. Terraform's one-time bootstrap image is also digest-pinned and listens on port 80. Container Apps supplies native probes for that ingress target; immediately before the first Node deployment, the generated workflow changes the target to port 3000 so the native probes follow the application port. No mutable container tag participates in provisioning.
 
 ### Acceptance evidence
 

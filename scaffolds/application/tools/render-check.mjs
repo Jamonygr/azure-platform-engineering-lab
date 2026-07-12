@@ -62,5 +62,6 @@ for (const path of ["web-app", "container-app", "aks"]) {
   assert.match(workflow, new RegExp(`GOLDEN_PATH.*${path.replace("-", "\\-")}`));
   await readFile(join(root, "overlays", path, ".platform", "delivery.json"), "utf8");
 }
+assert.match(workflow, /az containerapp ingress update[\s\S]*--target-port 3000 --transport auto --allow-insecure false/);
 assert.doesNotMatch(workflow, /client-secret|AZURE_CREDENTIALS/i);
 process.stdout.write(`Validated ${baseFiles.length} base files, one inert OIDC workflow with bounded readiness, and three selected overlays.\n`);
