@@ -85,7 +85,7 @@ jobs:
     outputs:
       request_json: ${{ steps.validate.outputs.request_json }}
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - uses: ./.github/actions/setup-controller
       - id: validate
         name: Validate request before creating anything
@@ -111,7 +111,7 @@ jobs:
       id-token: write
       issues: write
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - uses: ./.github/actions/setup-controller
       - uses: ./.github/actions/setup-conftest
       - uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5 # v2
@@ -151,7 +151,7 @@ jobs:
       id-token: write
       issues: write
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - uses: ./.github/actions/setup-controller
       - uses: ./.github/actions/setup-conftest
       - uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5 # v2
